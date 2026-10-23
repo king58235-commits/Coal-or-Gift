@@ -22,16 +22,19 @@ const Art = (() => {
   const img = k => imgs[k];
   const anchor = k => (M.anchors && M.anchors[k]) || {};
 
+  let loadedN = 0, warmed = false;
   function load() {
     const files = M.files || [];
     if (!files.length) { ready = true; return Promise.resolve(); }
     return Promise.all(files.map(src => new Promise(res => {
       const im = new Image();
-      im.onload = () => { imgs[keyOf(src)] = im; res(); };
-      im.onerror = () => { console.warn('[Art] 圖片載入失敗,改用程式繪製:', src); res(); };
+      im.onload = () => { imgs[keyOf(src)] = im; loadedN++; res(); };
+      im.onerror = () => { loadedN++; console.warn('[Art] 圖片載入失敗,改用程式繪製:', src); res(); };
       im.src = src;
     }))).then(() => { ready = true; warmUp(); });
   }
+  // 載入太久(網路很慢/有檔案卡住)時,由遊戲端呼叫:不再等待,缺的圖退回程式繪製
+  function forceReady() { if (!ready) { ready = true; warmUp(); } }
 
   // 腳底(x 置中, y)對齊畫圖;h = 整張圖的繪製高度
   function drawFeet(ctx, im, x, y, h, footY) {
@@ -88,6 +91,7 @@ const Art = (() => {
   // 載入完成後預先處理:①每張圖畫一次到 1×1 小畫布(強迫瀏覽器解碼/上傳,避免第一次顯示時卡)
   //                      ②預先算好所有分身會用到的換色版本
   function warmUp() {
+    if (warmed) return; warmed = true;
     const tiny = document.createElement('canvas'); tiny.width = tiny.height = 1;
     const tg = tiny.getContext('2d');
     for (const k of Object.keys(imgs)) bgJobs.push(() => tg.drawImage(imgs[k], 0, 0, 1, 1));
@@ -241,7 +245,7 @@ const Art = (() => {
     return true;
   }
 
-  const api = { load, has, img, santa, santaHand, kid, yeti, item, cover, icon, get ready() { return ready; }, UNIT, files: M.files || [] };
+  const api = { load, has, img, santa, santaHand, kid, yeti, item, cover, icon, get ready() { return ready; }, get progress() { const n = (M.files || []).length; return n ? loadedN / n : 1; }, forceReady, UNIT, files: M.files || [] };
   load();
   return api;
 })();

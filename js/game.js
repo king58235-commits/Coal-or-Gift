@@ -8,6 +8,25 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 let viewScale = 1;
 
+// 圖片還沒載完時不顯示任何遊戲畫面(否則第一秒會先看到程式繪製的暫代聖誕老人),
+// 先顯示載入畫面;超過 12 秒就放行,缺的圖退回程式繪製。
+const loadStart = performance.now();
+function isLoading() {
+  if (Art.ready) return false;
+  if (performance.now() - loadStart > 12000) { Art.forceReady(); return false; }
+  return true;
+}
+function drawLoading() {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#07102b'); g.addColorStop(1, '#1c3a70');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 40px ${FONT}`; ctx.fillStyle = '#ffd166'; ctx.fillText('Coal-or-Gift', W / 2, H / 2 - 40);
+  ctx.font = `700 20px ${FONT}`; ctx.fillStyle = '#bfe3ff'; ctx.fillText('聖誕老人熱身中…', W / 2, H / 2 + 6);
+  const bw = 300, bx = W / 2 - bw / 2, by = H / 2 + 36, k = Math.max(0.04, Art.progress);
+  ctx.fillStyle = 'rgba(255,255,255,.18)'; rr(ctx, bx, by, bw, 12, 6); ctx.fill();
+  ctx.fillStyle = '#ff5ea8'; rr(ctx, bx, by, bw * k, 12, 6); ctx.fill();
+}
+
 function resize() {
   const aspect = W / H;
   let cw = window.innerWidth, ch = cw / aspect;
@@ -181,6 +200,7 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (state === 'play') toggleItem(); }, { passive: false });
 window.addEventListener('keydown', e => {
   Sfx.init();
+  if (isLoading()) return;
   const k = e.key.toLowerCase();
   if (k === ' ' || k === 'enter') {
     e.preventDefault();
@@ -207,6 +227,7 @@ function goHome() {
 }
 
 function onPress(p) {
+  if (isLoading()) return;
   if (inRect(p, BTN.home)) { goHome(); return; }
   if (inRect(p, BTN.mute)) { Sfx.toggleMute(); return; }
   if (state === 'title') return startIntro();
@@ -628,6 +649,7 @@ function updateClones(dt) {
 
 // ---------------- 主更新 ----------------
 function update(dt) {
+  if (isLoading()) return;
   time += dt;
   for (const f of flakes) {
     f.y += (30 + 40 * f.z) * dt; f.x += Math.sin(time * 0.8 + f.p) * 14 * dt;
@@ -1193,6 +1215,7 @@ function drawOver() {
 function render() {
   ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
   ctx.clearRect(0, 0, W, H);
+  if (isLoading()) { drawLoading(); return; }
   if (state === 'intro') { drawIntro(); drawToggles(); return; }
   ctx.save();
   if (!Art.cover(ctx, 'scene/bg_main', W, H)) ctx.drawImage(bgCanvas, 0, 0);
