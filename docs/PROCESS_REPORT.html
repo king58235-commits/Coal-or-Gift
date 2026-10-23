@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coal-or-Gift 製作過程技術報告</title>
+<style>
+:root{--bg:#fbf8f3;--fg:#241c22;--mute:#6b5f68;--card:#fff;--line:#e6dccf;--acc:#c8203a;--acc2:#1a1030;--code:#f3ece2}
+@media (prefers-color-scheme:dark){:root{--bg:#17121c;--fg:#f1e9ee;--mute:#a79aa5;--card:#221a2a;--line:#3a2f45;--acc:#ff5a70;--acc2:#f1e9ee;--code:#2b2234}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:2rem;line-height:1.3;margin:.2em 0 .6em;color:var(--acc)}
+h2{font-size:1.45rem;margin:2.2em 0 .6em;padding-bottom:.25em;border-bottom:3px solid var(--acc)}
+h3{font-size:1.15rem;margin:1.8em 0 .4em}
+h4{font-size:1rem;margin:1.4em 0 .3em;color:var(--mute)}
+a{color:var(--acc)}
+code{background:var(--code);padding:.1em .35em;border-radius:4px;font:.88em ui-monospace,Consolas,monospace}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;line-height:1.5}
+pre code{background:none;padding:0;font-size:.85rem}
+blockquote{margin:1em 0;padding:.4em 1em;background:var(--card);border-left:5px solid var(--acc);border-radius:0 8px 8px 0}
+blockquote p{margin:.5em 0}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;font-size:.93rem;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--code);white-space:nowrap}
+hr{border:0;border-top:1px dashed var(--line);margin:2em 0}
+li{margin:.25em 0}
+@media (max-width:600px){body{font-size:15px}h1{font-size:1.6rem}}
+</style>
+</head>
+<body>
+<main>
+<h1 id="coal-or-gift-製作過程技術報告">Coal-or-Gift 製作過程技術報告</h1>
+<blockquote><p>一款「肌肉聖誕老人發禮物／煤炭」的惡搞瀏覽器小遊戲，<strong>從一句想法到可玩成品、含全套美術與入口頁</strong>，全程由一位非工程背景的製作人與兩個 AI 協作完成：<br><strong>Claude Code</strong>（寫程式、驗證、整合、審查）＋ <strong>Codex CLI</strong>（<code>gpt-6-luna</code>，負責生成圖片，並做過一輪程式碼審查）。<br>這份報告同時是：① 技術紀錄、② 「怎麼和 AI 一起做出一個產品」的教學參考。</p></blockquote>
+<hr>
+<h2 id="目錄">目錄</h2>
+<ol><li><a href="#1-成果總覽">成果總覽</a></li><li><a href="#2-製作時間線">製作時間線</a></li><li><a href="#3-技術架構與重點設計">技術架構與重點設計</a></li><li><a href="#4-ai-美術生成管線codex">AI 美術生成管線（Codex）</a></li><li><a href="#5-畫風決策實錄怎麼把ai-味去掉">畫風決策實錄：怎麼把「AI 味」去掉</a></li><li><a href="#6-品質把關審查與退回案例">品質把關：審查與退回案例</a></li><li><a href="#7-驗證方法沒有測試團隊時怎麼確認東西是對的">驗證方法：沒有測試團隊時怎麼確認東西是對的</a></li><li><a href="#8-人與-ai-的協作紀錄">人與 AI 的協作紀錄</a></li><li><a href="#9-給想教別人用-ai-的你可複製的做法">給想教別人用 AI 的你：可複製的做法</a></li><li><a href="#10-踩過的坑與限制誠實版">踩過的坑與限制（誠實版）</a></li><li><a href="#11-附錄">附錄</a></li></ol>
+<hr>
+<h2 id="1-成果總覽">1. 成果總覽</h2>
+<div class="tw"><table><thead><tr><th>項目</th><th>內容</th></tr></thead><tbody><tr><td>類型</td><td>純 HTML5 Canvas 網頁遊戲，<strong>無建置步驟、無第三方套件</strong>，用任何靜態伺服器就能跑</td></tr><tr><td>程式量</td><td>JavaScript 約 2,600 行（<code>game.js</code> 1,326、<code>sprites.js</code> 667、<code>art.js</code> 251…），工具 Python 約 330 行</td></tr><tr><td>美術</td><td>遊戲內 55 張圖 + 入口頁背景 12 張，<strong>全部由 Codex 生成</strong>，並逐張人工＋AI 審查</td></tr><tr><td>玩法</td><td>投擲禮物／煤炭、連擊與伴舞分身、雪怪頭目戰、偽裝老人陷阱與全螢幕肌肉秀、失誤計數、開場動畫、本機排行榜</td></tr><tr><td>頁面</td><td>入口頁（隨機背景輪播、排行榜、玩法說明）＋遊戲頁</td></tr><tr><td>版本控管</td><td>6 個 commit</td></tr><tr><td>生圖規模</td><td>留有 79 份 Codex 執行紀錄、10 份生圖工作清單（含風格實驗與被退回重做的圖）</td></tr><tr><td>工期型態</td><td>單一長對話，需求從「先討論」開始，逐步迭代</td></tr></tbody></table></div>
+<p><strong>使用的 AI 分工</strong></p>
+<div class="tw"><table><thead><tr><th>角色</th><th>工具</th><th>做什麼</th></tr></thead><tbody><tr><td>主要夥伴</td><td>Claude Code（Sonnet 5.5）</td><td>需求討論、寫遊戲、做工具、除錯、用機器人模擬調難度、審查生成圖、整合、寫文件、git</td></tr><tr><td>畫師</td><td>Codex CLI（<code>gpt-6-luna</code>，使用者預設模型）</td><td>生成所有角色、場景、Logo；另做一輪唯讀程式碼審查</td></tr><tr><td>人</td><td>製作人</td><td>提需求、拍板畫風、玩、給「手感」回饋、決定取捨</td></tr></tbody></table></div>
+<hr>
+<h2 id="2-製作時間線">2. 製作時間線</h2>
+<div class="tw"><table><thead><tr><th>階段</th><th>發生了什麼</th><th>關鍵決策／學到的事</th></tr></thead><tbody><tr><td><strong>0. 需求討論</strong></td><td>使用者只說「想做惡搞風、聖誕老人發禮物給好孩子、煤炭給壞孩子，先跟我討論」。AI 整理核心循環，列出要拍板的 4 件事</td><td>用「推薦選項＋理由」讓使用者快速決定：網頁版、生命制、連擊觸發雪怪、先用暫代美術</td></tr><tr><td><strong>1. 首版原型</strong></td><td>AI 一次寫出可玩版本：Canvas、WebAudio 合成音效、<strong>全部角色用程式畫</strong>（暫代）。內建瀏覽器實測</td><td>「先把玩法做出來，美術後補」，並設計成<strong>缺圖自動退回程式繪製</strong>，之後可分批換圖</td></tr><tr><td><strong>2. 手感與難度</strong></td><td>使用者要調難度。AI 寫了<strong>機器人玩家</strong>（新手／普通／熟練）在瀏覽器裡跑整局，量存活時間</td><td>數據驅動調參；發現「只加速時間會讓高手永遠不死」→ 要同時提高上限</td></tr><tr><td><strong>3. 惡搞機制</strong></td><td>使用者：後期分身擋住目標。→ 分身上限 4、只站兩側；多的改成<strong>偽裝成目標的聖誕老人</strong>，打到就全螢幕肌肉秀擋 1～2 秒</td><td>把「後期難度」從「更快更多」換成「更惡搞的干擾」，玩家反感度較低</td></tr><tr><td><strong>4. 打擊手感</strong></td><td>使用者：拋物線怪怪的 → 改短距離直線＋拖尾；主角投擲要有力量感、受擊要有衝擊感</td><td>加了頓幀、震動、閃白、爆炸擬聲字 → <strong>使用者說震動噁心、有卡頓</strong> → 全部拿掉震動與頓幀，閃白換實作</td></tr><tr><td><strong>5. 規則補強</strong></td><td>發現雪怪失敗沒懲罰（程式 bug）；難度改 1.5～2 分鐘一局；丟錯 3 次扣一顆心</td><td>使用者用「感覺」找 bug，AI 用程式找根因</td></tr><tr><td><strong>6. 入口頁</strong></td><td>先做輪播 → 使用者澄清想要「背景隨機大圖」→ 重做；新增本機前 5 名排行榜；遊戲內加「首頁」鍵</td><td>需求常常要「看到才知道」，快速做出來比反覆問更快</td></tr><tr><td><strong>7. 美術管線</strong></td><td>請 Codex 生圖：主角 11 姿勢 → 開場 3 張 → 小孩與怪物 → 偽裝老人 → 圖示 → 12 張入口背景 → Logo</td><td>見第 4～6 章</td></tr><tr><td><strong>8. 畫風大轉彎</strong></td><td>使用者覺得小孩和怪物「AI 味太重」→ 做風格實驗 → 決定孩子世界改<strong>韓系 Q 版</strong></td><td>見第 5 章</td></tr><tr><td><strong>9. 收尾</strong></td><td>README、讓 Codex 唯讀審查程式碼（2 項，1 項誤報）、修 bug、git commit、主頁改版與扁平 Logo、載入畫面</td><td>審查結果要逐項驗證，不照單全收</td></tr></tbody></table></div>
+<hr>
+<h2 id="3-技術架構與重點設計">3. 技術架構與重點設計</h2>
+<h3 id="31-檔案結構">3.1 檔案結構</h3>
+<pre><code>index.html        入口頁（背景輪播、排行榜、玩法說明）
+game.html         遊戲頁（一個 &lt;canvas&gt;）
+js/
+  game.js         遊戲邏輯與繪製：狀態機、投擲、目標、連擊、雪怪、肌肉秀、HUD、開場動畫
+  sprites.js      程式繪製的備援角色（沒有圖時自動使用）
+  art.js          圖片載入器：有圖用圖、缺圖退回；關鍵幀選擇；分身換色
+  art_manifest.js 圖片清單（由工具產生）
+  entry.js        入口頁：背景輪播、飄雪、排行榜顯示
+  scores.js       本機排行榜（localStorage）
+  audio.js        WebAudio 合成音效（零音檔）
+assets/           sprites/ scene/ ui/ intro/ bg/ anchors.json
+tools/            生圖與圖片處理工具、jobs/（生圖工作清單）
+docs/             ART_LIST.md、本報告</code></pre>
+<h3 id="32-設計重點">3.2 設計重點</h3>
+<p><strong>① 缺圖退回（graceful fallback）</strong>——整個專案最有價值的一個設計<br>所有繪製函式（<code>drawSanta/drawKid/drawYeti/drawItem</code>）一開始先問載入器 <code>Art.xxx()</code>：有正式圖就畫圖並回傳 <code>true</code>，否則落到原本的程式繪製。好處：</p>
+<ul><li>美術可以<strong>分批交付</strong>，每一批放進去遊戲都還能玩。</li><li>出圖失敗不會讓遊戲壞掉。</li><li>遊戲邏輯（<code>game.js</code>）幾乎不需要知道有沒有圖。</li></ul>
+<p><strong>② 圖片清單由工具產生，而不是寫死</strong><br><code>tools/build_manifest.py</code> 掃描 <code>assets/</code> 產生 <code>js/art_manifest.js</code>，遊戲只載入清單內的檔案 → 缺檔不會產生 404 洪水；<code>anchors.json</code> 記錄每張圖的錨點（例如主角「出手那隻手」的位置，投擲物從那裡飛出）。</p>
+<p><strong>③ 動畫用「少量關鍵幀整張切換」</strong><br>使用者明確否決了「拆手臂做骨架」，改成每組動作 2～4 張完整立繪：</p>
+<ul><li>主角投擲：待機／蓄力／出手（平射）／出手（向上，依瞄準角度選）。</li><li>秀肌肉、歡呼、跳舞各 2～3 張，來回播放。</li><li>彈跳、壓扁、左右翻轉、後仰、前撲、閃白、旋轉<strong>全部由程式補</strong>，所以不需要逐格動畫。</li></ul>
+<p><strong>④ 難度曲線用「加速時鐘」</strong><br><code>dif() = elapsed × 2.6</code>，所有隨時間變難的參數（生成間隔、停留時間、同時目標數、偽裝老人頻率）都讀 <code>dif()</code>。想把一局從 5 分鐘縮到 2 分鐘，只改一個係數。</p>
+<p><strong>⑤ 規則細節（都是和使用者討論＋實測後定的）</strong></p>
+<ul><li>3 顆愛心；目標沒處理離開 → 扣心（受傷後 0.9 秒保護期＋場上目標多 1 秒緩衝，避免一次崩盤）。</li><li>丟錯：扣 100 分、連擊減半；<strong>累積 3 次失誤再扣一顆心</strong>；連續打對 10 次可冷卻 1 次。</li><li>雪怪能量條與連擊<strong>分開計算</strong>，連擊管分身和倍率，能量條管雪怪何時出現，這樣連擊中斷不會讓雪怪遙遙無期。</li><li>打倒雪怪補一顆心；失敗扣心、扣 500 分、歸零。</li><li>偽裝老人：約 20 秒後出現，打到觸發肌肉秀；不打他，他自己溜走並給 +150 分（「識破有獎勵」）。</li></ul>
+<p><strong>⑥ 命中判定的手感</strong><br>先精準判定，沒中再放寬一圈（瞄準輔助）；投擲物短距離直線飛行（約 0.1 秒），總延遲約 0.3 秒。</p>
+<h3 id="33-效能案例分身出現時卡頓">3.3 效能案例：分身出現時卡頓</h3>
+<ul><li><strong>現象</strong>：玩到一半，分身出現時畫面卡住。</li><li><strong>量測</strong>：用機器人跑整局並量每幀耗時，發現分身出現的那一幀耗時 170～220 ms。</li><li><strong>根因</strong>：分身是主角圖換色，用 <code>getImageData</code> 逐像素處理 640×800 的圖，在遊戲進行中「當場計算」，還會強迫 GPU 同步。</li><li><strong>修法</strong>：①換色用一半解析度；②載入完成後在<strong>背景閒置時間預先算好</strong>所有版本（一次做一件，讓出執行緒）；③還沒算好就先用原圖，不卡。</li><li><strong>驗證</strong>：即時玩 45 秒共 4,566 幀，平均 7 ms、最慢 20 ms、<strong>零幀超過 25 ms</strong>。</li></ul>
+<blockquote><p>教學重點：<strong>效能問題要量，不要猜。</strong>第一次猜是「<code>ctx.filter</code> 太慢」就改掉了，但真正的元凶是另一個地方。</p></blockquote>
+<h3 id="34-第一秒出現程式畫的聖誕老人">3.4 「第一秒出現程式畫的聖誕老人」</h3>
+<p>首次造訪時圖片還在下載，載入器為了不讓遊戲壞掉而退回程式繪製，於是玩家第一秒看到「暫代版」。修法：圖片載完前只顯示載入畫面＋進度條，輸入忽略，超過 12 秒才放行。</p>
+<blockquote><p>教學重點：<strong>「容錯機制」本身可能變成使用者看得到的瑕疵</strong>，容錯要區分「永遠缺圖」和「還在載」。</p></blockquote>
+<hr>
+<h2 id="4-ai-美術生成管線codex">4. AI 美術生成管線（Codex）</h2>
+<h3 id="41-為什麼用-codex-cli怎麼叫它">4.1 為什麼用 Codex CLI、怎麼叫它</h3>
+<p>使用者一句話：「你直接用 codex cli 調用 codex 看看，模型用 luna，你試試。」</p>
+<pre><code class="lang-bash">codex exec -m gpt-6-luna -s read-only -C &lt;專案資料夾&gt; --skip-git-repo-check -i 參考圖.png -  &lt; prompt.txt</code></pre>
+<p>重點參數：<code>-m</code> 指定模型、<code>-s read-only</code> 沙盒唯讀、<code>-i</code> 附參考圖（可多張）、<code>-</code> 從標準輸入讀 prompt（避免跳脫字元問題）、<code>-o</code> 把最後回覆寫成檔案。</p>
+<h3 id="42-第一個大坑codex-生得出圖但存不進專案">4.2 第一個大坑：Codex 生得出圖，但「存不進專案」</h3>
+<p>第一次測試成功；第二次要它一次生 10 張並存進專案資料夾，結果它回報「沒有辦法存」。檢查才發現：<strong>圖其實生出來了</strong>，存在 <code>~/.codex/generated_images/&lt;session id&gt;/</code>，只是 Codex 自己「複製進專案」那一步常常失敗。</p>
+<p><strong>解法：不要叫 Codex 存檔，改由我們自己收。</strong>寫了 <code>tools/gen_with_codex.py</code>：</p>
+<ol><li>每一張圖<strong>獨立呼叫一次</strong> Codex（可並行 3～6 個），prompt 前面包一層「只生成一次、不要存檔、不要寫程式、回覆 done」。</li><li>從輸出標頭解析 <code>session id:</code>，到對應資料夾找成品。</li><li>驗證成品：尺寸夠大、<strong>必須有真正透明的像素</strong>（拒絕假透明，見下）。</li><li>複製到專案，失敗自動重試（<code>--retries</code>），可用 <code>--only 名稱,名稱</code> 只重跑指定的幾張。</li></ol>
+<blockquote><p>教學重點：<strong>遇到 AI 工具的某一步不穩，不要硬叫它做；把那一步抽出來自己做。</strong></p></blockquote>
+<h3 id="43-工作清單格式可重現可重跑">4.3 工作清單格式（可重現、可重跑）</h3>
+<p>每批生圖是一個 JSON，等於「這批的配方」：</p>
+<pre><code class="lang-json">{
+  &quot;base_prompt&quot;: &quot;共用規則（風格、一致性、透明背景、禁止文字…）&quot;,
+  &quot;reference&quot;: [&quot;assets/_gen/chars_kr/goblin_a_idle.png&quot;],
+  &quot;out_dir&quot;: &quot;assets/_gen/chars_kr&quot;,
+  &quot;jobs&quot;: [
+    { &quot;name&quot;: &quot;goblin_a_smug&quot;, &quot;reference&quot;: [&quot;…可覆寫參考圖…&quot;], &quot;prompt&quot;: &quot;這一張的姿勢描述&quot; }
+  ]
+}</code></pre>
+<p><code>opaque: true</code> 用於全版背景圖（不要求透明）。之後要改 prompt、重生一張，只要改 JSON 再 <code>--only</code> 重跑。</p>
+<h3 id="44-圖片後處理">4.4 圖片後處理</h3>
+<div class="tw"><table><thead><tr><th>工具</th><th>做什麼</th></tr></thead><tbody><tr><td><code>prep_sprite.py</code></td><td>裁掉透明邊、依「外框」縮放、腳底貼底；<code>--scale</code> 可固定倍率</td></tr><tr><td><code>build_sprites_kr.py</code></td><td>依角色分組套<strong>同一個倍率</strong>（以該組最高的一張為準，避免有光環/星星的表情被切頭），輸出到 <code>assets/sprites/…</code></td></tr><tr><td><code>build_manifest.py</code></td><td>掃描圖片產生清單，並讀 <code>anchors.json</code>、<code>units.json</code></td></tr></tbody></table></div>
+<h3 id="45-prompt-設計有效的寫法">4.5 Prompt 設計：有效的寫法</h3>
+<p><strong>① 共用的「風格＋一致性」前導（<code>base_prompt</code>）</strong></p>
+<pre><code>SPRITE for a comedic 2D game, full body, transparent background (real alpha channel),
+no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped,
+centered, portrait about 2:3.
+CONSISTENCY (very important): the attached reference image is the approved design of THIS
+character. Draw the SAME character (same face, hair, outfit, colors, proportions, outline
+thickness, rendering style) at the same scale and framing as the reference, only changing
+the pose/expression described below. Do not add props that are not mentioned.</code></pre>
+<p><strong>② 每張只描述「變化的那一點」</strong>：<br><code>Reformed into a GOOD kid: a sweet smile with no fangs, relaxed eyebrows, big friendly sparkling eyes (no red). A golden HALO floats above the red mohawk. The bat is gone, both hands waving happily. Keep bandana, mohawk and jacket so the contrast is funny.</code></p>
+<p><strong>③ 用「參考圖」鎖定角色</strong>：先生一張核准的待機圖，之後所有表情／姿勢都附它當參考。風格也可以用參考圖指定（「Reference 2 shows the exact ART STYLE to use」）。</p>
+<p><strong>④ 負面約束要具體</strong>：<code>NO belt, NO buckle … exactly like the reference</code>（因為 AI 會自己加腰帶）；<code>no transparent hole, no see-through area</code>（因為愛心中間曾經破洞）；<code>do NOT draw any checkerboard pattern</code>（因為會把假透明的棋盤格畫進去）。</p>
+<p><strong>⑤ 圖上盡量不要文字</strong>：AI 寫不好中文。標題字由程式疊。<strong>唯一例外是 Logo</strong>：英文短字，要求「逐字母拼出」並在驗收時逐字確認。</p>
+<p><strong>⑥ 解剖學條件直接寫進 prompt</strong>：<code>exactly two arms, two legs, five fingers per hand</code>（寫了也不能保證，仍要審查）。</p>
+<p><strong>⑦ 構圖要「明說」</strong>：入口頁背景要求「低角度仰拍、主角被左邊緣切掉」「蟲眼視角」「俯瞰」「背面」等，才會真的不一樣；沒說的話 AI 傾向都畫成「角色站左或右」。</p>
+<h3 id="46-假透明與其他圖片陷阱">4.6 假透明與其他圖片陷阱</h3>
+<ul><li><strong>假透明</strong>：生圖工具有時會把灰白棋盤格「畫」進圖裡，整張 alpha 全不透明。→ 工具自動檢查最小 alpha，拒收。</li><li><strong>半透明光暈</strong>：邊緣的淡淡光暈會讓裁切外框變大。→ 處理時把 alpha 太低的像素清掉再算外框。</li><li><strong>角色大小不一致</strong>：每張圖獨立縮放會讓同一角色忽大忽小。→ 同一組用同一個縮放倍率。</li></ul>
+<hr>
+<h2 id="5-畫風決策實錄怎麼把ai-味去掉">5. 畫風決策實錄：怎麼把「AI 味」去掉</h2>
+<p>這段是整個專案最值得教學的部分：<strong>風格不是一次選對，而是看過、比過才知道。</strong></p>
+<h3 id="51-時間順序">5.1 時間順序</h3>
+<ol><li><strong>主角（寫實肌肉）</strong>：第一張測試圖就被使用者接受：「好像還行，走這個風格」。主角的<strong>寫實反差本身就是笑點</strong>。</li><li><strong>用同樣風格畫好孩子／流氓／哥布林／雪怪</strong>：圖都沒有解剖錯誤，但使用者看了說：<strong>「小孩跟怪物實在 AI 味有點太重。有甚麼方法補救？要換畫風嗎？」</strong></li><li>AI 先<strong>分析原因</strong>（過度渲染、每個部位精緻度一樣高、通用奇幻風、縮到 130 像素細節看不到），並列出 5 個補救方向。</li><li><strong>實驗①：壓平濾鏡</strong>（程式把顏色壓成 12 色、抹細節）→ 只小幅改善，眼睛還變糊 → <strong>否決，並如實告訴使用者</strong>。</li><li><strong>實驗②：叫 Codex 重畫成「西式扁平」</strong>（無漸層、統一粗外框、簡化）→ 明顯改善，並排比較圖給使用者看。</li><li>使用者追問：<strong>「如果改成比較日系或韓系的扁平畫風呢？」</strong> → 再請 Codex 各畫日系與韓系 3 個角色，<strong>四種風格並排</strong>（寫實／西式扁平／日系／韓系，旁邊放聖誕老人看搭不搭）。</li><li>使用者：<strong>「韓系好了」。</strong></li></ol>
+<h3 id="52-四種風格的比較ai-給的判讀">5.2 四種風格的比較（AI 給的判讀）</h3>
+<div class="tw"><table><thead><tr><th>風格</th><th>優點</th><th>缺點</th></tr></thead><tbody><tr><td>寫實（原本）</td><td>與主角一致</td><td>AI 味重，縮小後細節是雜訊</td></tr><tr><td>西式扁平</td><td>縮小最清楚、好壞最好分</td><td>不是使用者想要的調性</td></tr><tr><td>日系</td><td>好孩子最可愛</td><td>壞角色細節仍多，整組不統一</td></tr><tr><td><strong>韓系貼圖風</strong></td><td>最乾淨、最統一、AI 味最低</td><td>壞孩子兇相要靠 prompt 補強（加大紅眼、斜眉、獠牙）</td></tr></tbody></table></div>
+<h3 id="53-最終規則並寫進文件">5.3 最終規則（並寫進文件）</h3>
+<blockquote><p><strong>聖誕老人「本人」＝寫實肌肉風；孩子世界裡的一切＝韓系貼圖風。</strong></p></blockquote>
+<p>後續衍生出的判斷：</p>
+<ul><li>使用者發現<strong>偽裝的聖誕老人</strong>還是寫實風，和其他目標不協調 → 他是「目標」，要和孩子同世界 → <strong>重畫成韓系 Q 版</strong>（保留白鬍子、墨鏡、紅褲、簡化的肌肉）。附帶好處：Q 版混在小孩中更難認，難度設計才成立。</li><li>入口頁 12 張背景第一輪畫風忽寫實忽卡通、構圖都是「站左或右」→ 使用者指出「樹深蹲那張差最多（但概念我認可）」→ 重生成：<strong>整張圖（含背景）統一成主角的 cel-shaded 風格＋12 種不同構圖</strong>。</li><li>Logo 第一版是立體膨脹風（積雪、岩漿裂縫），使用者「看不清楚，能平面一點嗎」→ 重生成平面版 3 種 → 選「深色底板＋白邊」那版，因為任何背景上對比最穩。</li></ul>
+<blockquote><p>教學重點：</p>
+<ul><li><strong>先做小樣本（每種風格 3 個角色）並排比較</strong>，不要直接生全套。</li><li><strong>讓 AI 說明為什麼不好</strong>（診斷），再決定方向。</li><li><strong>一個風格規則用一句話寫清楚</strong>，之後所有決策都有依據。</li></ul></blockquote>
+<hr>
+<h2 id="6-品質把關審查與退回案例">6. 品質把關：審查與退回案例</h2>
+<p>使用者一開始就叮嚀：<strong>「我發現生圖有錯（他有三條腿），這種不合理的你要幫我審查喔。」</strong>之後每一張圖都被打開檢查，並把這個要求存進專案筆記。</p>
+<h3 id="61-審查清單">6.1 審查清單</h3>
+<ul><li>手臂／腿／手指數量與是否融合</li><li>臉、鬍子、墨鏡、帽子、服裝與核准參考圖是否一致</li><li>不該有的東西（腰帶、上衣、手上拿東西）</li><li>構圖：全身是否入鏡、有沒有被裁</li><li><strong>背景是否真的透明</strong></li><li>表情／姿勢是否符合需求（例如「出手向上」手臂真的向上）</li><li>並排縮到實際遊戲大小再看一次（好壞孩子還分得出來嗎？）</li></ul>
+<h3 id="62-實際被退回的案例">6.2 實際被退回的案例</h3>
+<div class="tw"><table><thead><tr><th>圖</th><th>問題</th><th>處理</th></tr></thead><tbody><tr><td>主角蓄力 <code>windup</code></td><td>「透明背景」其實是畫進去的棋盤格，整張 alpha 不透明；姿勢也不像蓄力</td><td>重生成；<strong>工具加上自動拒收假透明</strong></td></tr><tr><td>偽裝老人（毛帽版）待機</td><td>多了腰帶、褲色偏暗</td><td>prompt 明寫「NO belt」重生成</td></tr><tr><td>偽裝老人（毛帽版）再次重生</td><td>這次變成「圓肚子加胸毛」，腹肌不見了（玩家要靠肌肉辨認）</td><td>prompt 補「保持六塊腹肌、沒有肚子和胸毛」</td></tr><tr><td>偽裝老人（尖耳版）秀肌肉</td><td>多了腰帶</td><td>重生成</td></tr><tr><td>哥布林 B 待機</td><td>畫得太寫實（疣、皺紋），與 A 不同風格</td><td>prompt 補「圓胖、無疣、無紋理」</td></tr><tr><td>灰色空愛心</td><td>中間有透明的洞</td><td>prompt 補「完全不透明、無洞、無模糊」</td></tr><tr><td>雪堆</td><td>太扁、只剩外框，蓋不住小孩的腳</td><td>要求「實心白色圓丘、寬是高的 3 倍」</td></tr><tr><td>流氓 B 被打中、其他數張</td><td>連續兩次沒出圖</td><td>工具自動重試</td></tr></tbody></table></div>
+<blockquote><p><strong>上表只是節錄；每一批生圖都有一部分要退回或重跑，這就是 AI 生圖的真實品質。</strong>沒有審查就不要上線。</p></blockquote>
+<hr>
+<h2 id="7-驗證方法沒有測試團隊時怎麼確認東西是對的">7. 驗證方法：沒有測試團隊時怎麼確認東西是對的</h2>
+<div class="tw"><table><thead><tr><th>方法</th><th>用在哪</th><th>為什麼有效</th></tr></thead><tbody><tr><td><strong>機器人玩家</strong>（不同反應速度／手速／失誤率）</td><td>調難度曲線、驗證規則改動沒打壞平衡</td><td>在瀏覽器裡「手動推進」遊戲時間，一局幾秒就跑完，可重複上百次。得到：新手約 100 秒、普通約 120 秒、熟練 220～280 秒存活</td></tr><tr><td><strong>手動推進＋凍結再截圖</strong></td><td>檢查特定瞬間的畫面（蓄力、出手、命中、肌肉秀）</td><td>把 <code>update</code> 換成空函式，用程式設定時間，畫面就停在想看的那一格</td></tr><tr><td><strong>逐格量測每幀耗時</strong></td><td>找卡頓</td><td>區分「JS 記錄指令」與「真的畫出來」（GPU 是非同步，只量 JS 會誤判）</td></tr><tr><td><strong>位置檢查函式</strong></td><td>目標與分身絕不重疊、目標必須站在地面上</td><td>規則寫成程式，之後調位置會自動報錯</td></tr><tr><td><strong>重現 AI 審查的回報</strong></td><td>Codex 審查的 2 項發現</td><td>寫小腳本實際觸發，才知道一項是誤報、另一項是真的但極罕見</td></tr><tr><td><strong>兩種視窗尺寸截圖</strong></td><td>入口頁（桌面 1440×810、手機 375×812）</td><td>版面問題</td></tr></tbody></table></div>
+<blockquote><p>重點：<strong>能自動重現的就不要靠人眼。</strong>「機器人」比人更能暴露平衡問題，但它是<strong>完美玩家</strong>，所以真人的壽命會更短；最後仍要真人玩。</p></blockquote>
+<hr>
+<h2 id="8-人與-ai-的協作紀錄">8. 人與 AI 的協作紀錄</h2>
+<p>這章是教學的核心：<strong>使用者說了什麼 → AI 怎麼理解與行動 → 結果。</strong></p>
+<h3 id="81-對話節奏觀察到的模式">8.1 對話節奏（觀察到的模式）</h3>
+<ol><li><strong>先討論，再動手</strong>：使用者的第一句就是「先跟我討論」。AI 給出推薦選項＋理由，使用者快速拍板。</li><li><strong>每一輪都有「一個明確的下一步問題」</strong>，而不是丟一堆選項。</li><li><strong>使用者用「感覺」說話，AI 負責把感覺翻譯成可量測的東西</strong>（例如「噁心」→ 震動與頓幀；「卡住」→ 逐幀耗時）。</li><li><strong>AI 先做出來再讓使用者看</strong>（截圖／並排比較），而不是一直問。</li><li><strong>AI 誠實回報限制</strong>：看不了 YouTube 影片、沒有實機測試、機器人是完美玩家、某個濾鏡沒用。</li></ol>
+<h3 id="82-使用者回饋--ai-動作對照表節選">8.2 使用者回饋 → AI 動作對照表（節選）</h3>
+<div class="tw"><table><thead><tr><th>使用者說</th><th>實際問題</th><th>AI 的做法</th></tr></thead><tbody><tr><td>「分身把目標擋住完全看不到」</td><td>設計問題（後期分身太多）</td><td>上限 4、只站兩側；多的改成偽裝老人；後來再要求「分身與目標區域直接禁止重疊」→ 重排所有位置＋寫位置檢查函式</td></tr><tr><td>「這版有些目標會飛在空中」</td><td>AI 自己加的「最上排」位置站在地平線上方</td><td>承認是自己的錯，移除該排，加「不可高於地平線」檢查</td></tr><tr><td>「拋物線手感有點奇怪」</td><td>設計取向</td><td>改短距離直線＋拖尾，縮短總延遲</td></tr><tr><td>「畫面震動太噁心，接近卡死」</td><td>震動＋頓幀疊加</td><td>完全移除震動與頓幀；順手把 <code>ctx.filter</code> 閃白改成離屏畫布實作</td></tr><tr><td>「受擊壞小孩特別明顯卡頓」</td><td>煤炭命中頓幀較長＋逐筆濾鏡</td><td>同上；用逐幀量測確認沒有尖峰</td></tr><tr><td>「雪怪擊退失敗沒有懲罰，進度保持最高」</td><td>真的 bug：用來標記「已砸地」的旗標在登場時就用掉，失敗時永遠不觸發</td><td>改用獨立旗標；用模擬驗證（扣心、−500、連擊與能量歸零）</td></tr><tr><td>「5 分鐘太長，人類專注度撐不住」</td><td>難度時間尺度</td><td>加速時鐘 ×2.6，並提高上限讓高手也會死</td></tr><tr><td>「分身出現時卡住」</td><td>即時換色運算</td><td>背景預先計算＋半解析度</td></tr><tr><td>「偽裝老人離開時，主角會發話，很奇怪」</td><td>對話框的說話者錯了</td><td>改成偽裝老人頭上浮字</td></tr><tr><td>「肌肉秀沒有字有點單調，加點字或別的惡搞元素」（先前說過不要效果字）</td><td>需求演變</td><td>加了新聞直播台風格（LIVE、跑馬燈快訊）、對話框、脫落的偽裝、狗仔閃光；<strong>把「效果字」和「有笑點的內容字」區分開</strong></td></tr><tr><td>「第一秒可能出現 css 畫的聖誕老人」</td><td>載入階段的容錯變成瑕疵</td><td>載入畫面＋進度條</td></tr><tr><td>「我偷看到分身的皮膚顏色異常」</td><td>色相偏移把皮膚也轉色</td><td>改成只換飽和的純紅色（帽子與褲子）；後來發現使用者看到的其實是<strong>瀏覽器快取的舊版程式</strong>，提醒強制重新整理</td></tr></tbody></table></div>
+<h3 id="83-叫-codex-畫不同風格的對話過程完整示範">8.3 「叫 Codex 畫不同風格」的對話過程（完整示範）</h3>
+<blockquote><p><strong>使用者</strong>：我覺得小孩跟怪物 AI 味太重。我有甚麼方法補救？要換畫風嗎？<br><strong>Claude</strong>：先診斷原因（過度渲染等），列 5 個方向（只換小孩與怪物成扁平風／壓平濾鏡／全改像素風／請真人畫／回到程式向量角色），並<strong>先實測一個便宜的</strong>（壓平濾鏡）— 結果不好，如實說。同時<strong>停掉</strong>正在跑的 28 張批次（避免浪費在可能要換風格的圖上），改做 4 個角色的扁平風樣品。<br><strong>使用者</strong>：（看了並排比較）如果改成比較日系或韓系的扁平畫風呢？<br><strong>Claude</strong>：再請 Codex 各畫日系／韓系 3 個角色，<strong>四種並排</strong>＋旁邊放聖誕老人，並給出各自優缺點與推薦。<br><strong>使用者</strong>：韓系好了。<br><strong>Claude</strong>：用「韓系待機圖」當新的參考，批次重生成所有表情；並針對壞孩子加強兇相（因為韓系最大的風險是兇不起來）。</p></blockquote>
+<p>這個流程可以濃縮成一條通則：</p>
+<pre><code>遇到不滿意 → 讓 AI 診斷原因 → 低成本實驗 → 並排比較 → 人拍板 → 寫成一句規則 → 批量執行</code></pre>
+<h3 id="84-人與-ai-各自擅長什麼">8.4 人與 AI 各自擅長什麼</h3>
+<div class="tw"><table><thead><tr><th>人（製作人）</th><th>AI</th></tr></thead><tbody><tr><td>有沒有梗、好不好笑、噁不噁心</td><td>寫程式、整合、重構</td></tr><tr><td>風格方向與取捨（最後拍板）</td><td>提供選項、成本、風險、推薦</td></tr><tr><td>遊戲手感、玩起來的感受</td><td>把感受轉成數據並驗證（機器人、逐幀量測）</td></tr><tr><td>發現「這不對勁」（三條腿、飛在空中、風格不一致）</td><td>逐張審查、寫檢查工具、批量重跑</td></tr><tr><td>看到 AI 沒預料到的情境（快取、第一秒閃一下）</td><td>找根因、修正、寫文件</td></tr></tbody></table></div>
+<hr>
+<h2 id="9-給想教別人用-ai-的你可複製的做法">9. 給想教別人用 AI 的你：可複製的做法</h2>
+<h3 id="91-十條原則">9.1 十條原則</h3>
+<ol><li><strong>先討論再實作</strong>：第一輪花 5 分鐘定 4 個關鍵決策（平台、結束條件、核心機制、美術策略），比直接動手省很多。</li><li><strong>先用暫代素材把玩法做出來</strong>，美術最後換；並從第一天就設計「缺圖退回」。</li><li><strong>把 AI 不穩的環節抽出來自己做</strong>（例如 Codex 存檔失敗 → 自己收圖）。</li><li><strong>一個資料夾＋一份 JSON 配方＝可重現</strong>：生圖的 prompt 與參考圖放版本控管，要改只改配方再重跑。</li><li><strong>風格要「看過再選」</strong>：每種風格先做 3 個角色的小樣本並排比較，不要直接生全套。</li><li><strong>永遠審查 AI 的產出</strong>：圖片檢查解剖與一致性；程式碼審查要逐項重現，因為 AI 審查會有誤報。</li><li><strong>把使用者的感覺轉成可量測的東西</strong>，並用機器人／逐幀量測驗證。</li><li><strong>每個修改都要驗證</strong>：截圖、模擬、量測，不要只說「應該好了」。</li><li><strong>誠實</strong>：看不了影片、沒實機、工具沒效就直接說。</li><li><strong>把決策寫下來</strong>（最終風格規則、檔案流程、審查標準），之後新增內容就有依據，也方便交接給別人。</li></ol>
+<h3 id="92-生圖-prompt-骨架可直接套用">9.2 生圖 prompt 骨架（可直接套用）</h3>
+<pre><code>[用途] SPRITE for a 2D game, full body, transparent background (real alpha channel),
+       no ground shadow, no text, ONE character, nothing cropped, centered, portrait 2:3.
+[風格] ART STYLE: &lt;一句話風格，附參考圖：「match the attached reference&#x27;s style exactly」&gt;
+[一致性] Draw the SAME character as the attached reference (face, outfit, colors, proportions,
+       outline), only changing the pose/expression below. Do not add props not mentioned.
+[本張] &lt;只描述這張的變化&gt;
+[禁止] NO &lt;常被亂加的東西&gt;; the fill must be fully opaque; do NOT draw a checkerboard.
+[構圖] COMPOSITION: &lt;視角、角色大小與位置&gt;（背景／場景圖才需要）</code></pre>
+<h3 id="93-審查檢查表印出來貼在旁邊">9.3 審查檢查表（印出來貼在旁邊）</h3>
+<pre><code>□ 肢體／手指數量對
+□ 與參考圖是同一個角色（臉、色、服裝）
+□ 沒有多出不該有的東西（腰帶、道具、文字）
+□ 背景真的透明（放到亮／暗底上都看）
+□ 沒被裁到
+□ 縮到遊戲實際大小仍然讀得懂（尤其是「好 vs 壞」這類關鍵辨識）
+□ 與同組其他圖大小與風格一致</code></pre>
+<h3 id="94-一個適合教學的專案切法建議順序">9.4 一個適合教學的專案切法（建議順序）</h3>
+<ol><li>需求討論（30 分鐘）→ 2. 最小可玩原型（程式畫）→ 3. 調手感與難度（機器人）→ 4. 加特色機制 → 5. 做「缺圖退回」的美術載入器 → 6. 風格實驗與拍板 → 7. 批量生圖＋審查 → 8. 入口頁與收尾 → 9. 文件、程式碼審查、版本控管。</li></ol>
+<hr>
+<h2 id="10-踩過的坑與限制誠實版">10. 踩過的坑與限制（誠實版）</h2>
+<p><strong>AI 生圖</strong></p>
+<ul><li>成功率並不高：多手腳、假透明、細節不一致、腰帶亂加、風格漂移，都發生過。</li><li>同一個角色的跨姿勢一致性要靠參考圖＋逐張審查，而且仍會偏。</li><li>生中文字很差；英文 Logo 這次逐字母驗證才敢用。</li><li>一次叫它做很多張會失敗；每張獨立呼叫較穩。</li></ul>
+<p><strong>AI 工具鏈</strong></p>
+<ul><li>部分指令被內建安全檢查擋下（例如批次刪除含萬用字元的目錄），需要人手動執行。AI 不應繞過。</li><li>截圖會「慢一拍」（顯示的是前一個畫面），要等一下或重拍才可信。</li><li>瀏覽器<strong>快取舊程式</strong>造成「我改了但你看到沒改」的誤會；改完要強制重新整理。</li><li>預覽瀏覽器視窗的自動暫停機制（切換分頁就暫停）會干擾自動化測試，要在測試時關掉。</li><li>AI 程式碼審查有誤報：這次兩項裡有一項照它描述的情境重現不出來（但旁邊真的有個相關漏洞）。</li></ul>
+<p><strong>驗證的限制</strong></p>
+<ul><li>機器人是完美玩家，真人壽命會更短。</li><li>手機只用瀏覽器模擬過，<strong>沒有實機測試</strong>。</li><li>我無法觀看 YouTube，只能看使用者貼的截圖。</li><li>慢速網路下的載入畫面是靠邏輯確認，沒有實際在慢網路上看過。</li></ul>
+<p><strong>還沒做的</strong></p>
+<ul><li>背景音樂、遊戲背景（夜晚雪地）與命中擬聲字的圖像化、手機實機優化、上線發佈。</li></ul>
+<hr>
+<h2 id="11-附錄">11. 附錄</h2>
+<h3 id="111-主要-commit">11.1 主要 commit</h3>
+<div class="tw"><table><thead><tr><th>commit</th><th>內容</th></tr></thead><tbody><tr><td><code>2cecc8a</code></td><td>Initial commit：整個遊戲、美術、工具</td></tr><tr><td><code>928ced3</code></td><td>移除暫代圖、實驗檔與舊的工作清單</td></tr><tr><td><code>fa9781f</code></td><td>README ＋ 結算只執行一次（Codex 審查的修正）</td></tr><tr><td><code>3354c00</code></td><td>入口頁改版（Logo 美術字、緞帶、閃光按鈕、偷看的角色）</td></tr><tr><td><code>8350072</code></td><td>平面版 Logo（深色底板）</td></tr><tr><td><code>6c64708</code></td><td>載入畫面（避免第一秒閃出暫代聖誕老人）</td></tr></tbody></table></div>
+<h3 id="112-生圖批次與工作清單toolsjobs">11.2 生圖批次與工作清單（<code>tools/jobs/</code>）</h3>
+<div class="tw"><table><thead><tr><th>檔案</th><th>內容</th></tr></thead><tbody><tr><td><code>santa.json</code></td><td>主角 10 個姿勢（以核准的待機圖當參考）</td></tr><tr><td><code>intro.json</code></td><td>開場動畫 3 個關鍵畫面（蓄力／撕衣／登場）</td></tr><tr><td><code>kr_stage1/2/3.json</code></td><td>韓系角色：新造型待機＋各種表情（開心、哭、得意、被打中、洗白）</td></tr><tr><td><code>fake_santa_kr.json</code></td><td>偽裝聖誕老人（韓系 Q 版）6 張</td></tr><tr><td><code>kr_items.json</code></td><td>禮物、煤炭、愛心、雪堆</td></tr><tr><td><code>bg_scenes_v2.json</code></td><td>入口頁 12 個場景（統一畫風＋12 種構圖）</td></tr><tr><td><code>logo.json</code>／<code>logo_flat.json</code></td><td>Logo 立體版與平面版</td></tr></tbody></table></div>
+<h3 id="113-常用指令">11.3 常用指令</h3>
+<pre><code class="lang-bash">python -m http.server 8765                         # 本機預覽
+python tools/gen_with_codex.py tools/jobs/X.json   # 批次生圖（--parallel N、--only a,b、--retries N）
+python tools/build_sprites_kr.py                   # 原圖 → 遊戲規格
+python tools/build_manifest.py                     # 更新圖片清單</code></pre>
+<h3 id="114-相關文件">11.4 相關文件</h3>
+<ul><li><a href="../README.md"><code>README.md</code></a>：玩法、操作、專案結構、調整點</li><li><a href="ART_LIST.md"><code>docs/ART_LIST.md</code></a>：美術清單與最終風格決定</li></ul>
+</main>
+</body>
+</html>
