@@ -446,7 +446,8 @@ function spawnTarget() {
 // 扣愛心:受傷後有 0.9 秒保護期,避免同時間好幾個目標超時一次扣光
 function loseHeart(forced) {
   if (G.grace > 0 && !forced) return false;
-  G.lives--; breakCombo(); G.hurt = 1; G.grace = 0.9;
+  if (state !== 'play') return false;    // 結算後不再扣愛心
+  G.lives = Math.max(0, G.lives - 1); breakCombo(); G.hurt = 1; G.grace = 0.9;
   // 喘息:場上存活的目標多給 1 秒,避免一次崩盤連扣
   for (const t of targets) if (t.state === 'idle') { t.life += 1; t.lifeMax = Math.max(t.lifeMax, t.life); }
   flash('#ff2d2d', 0.5);
@@ -456,7 +457,9 @@ function loseHeart(forced) {
 }
 
 function endGame() {
+  if (state === 'over') return;          // 只結算一次(同一幀內可能有多個事件都想結束遊戲)
   state = 'over'; overT = 0; mouse.down = false;
+  projectiles.length = 0;                // 已飛出的投擲物不再落地,避免結算後分數又變動
   G.rank = Scores.add(G.score, G.maxCombo, G.elapsed);   // 寫入本機排行榜(前 5 名)
   best = Scores.best();
   Sfx.gameover();
@@ -675,10 +678,12 @@ function update(dt) {
   } else updateYeti(dt);
 
   updateTargets(muscle ? dt * 0.5 : dt);
+  if (state !== 'play') return;          // 這一幀已經結算,後面的更新(分身、投擲物落地)都不用做了
   syncClones(); updateClones(dt);
 
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
+    if (!p) continue;                    // 落地時若觸發結算,陣列會被清空
     if (p.delay > 0) {
       p.delay -= dt;
       if (p.delay <= 0) {
