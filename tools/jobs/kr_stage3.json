@@ -1,0 +1,34 @@
+{
+  "base_prompt": "SPRITE for a comedic 2D game, full body, transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped (head to feet fully visible), centered, portrait about 2:3.\nART STYLE (must be identical across all characters): Korean messenger-sticker / emoticon style (like KakaoTalk or LINE friends): very simple chubby rounded character about 2 heads tall, minimal face, flat colors with at most one soft shade tone, thin uniform outline in a slightly darker tone of the fill color, almost no detail, no glossy highlights, no fabric wrinkles. It must look hand-drawn by an illustrator, NOT like an AI render.\nCONSISTENCY: when an attached reference image of the same character is given, keep the SAME character (face, hair, outfit, colors, proportions, outline) and only change what the instruction says. Do not add props that are not mentioned.",
+  "out_dir": "assets/_gen/chars_kr",
+  "jobs": [
+    {
+      "name": "thug_b_hit",
+      "reference": [
+        "assets/_gen/chars_kr/thug_b_idle.png"
+      ],
+      "prompt": "Just got hit in the face with a lump of coal: whole face smeared black with soot, eyes are dizzy spiral swirls, tongue out, stumbling backwards, a few small yellow stars circling above the head, bat drooping from one hand."
+    },
+    {
+      "name": "goblin_b_smug",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_b_idle.png"
+      ],
+      "prompt": "Cackling with glee, hugging the stolen blue gift tightly: head thrown back, eyes squeezed shut, mouth wide open in a shrieking laugh with jagged teeth, ears perked up."
+    },
+    {
+      "name": "goblin_b_hit",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_b_idle.png"
+      ],
+      "prompt": "Just got hit in the face with a lump of coal: face smeared black with soot, eyes are dizzy white spirals, tongue out, stumbling, a few small yellow stars circling above the head, ears drooping, still clutching the blue gift."
+    },
+    {
+      "name": "goblin_b_converted",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_b_idle.png"
+      ],
+      "prompt": "Reformed into a GOOD little goblin: a sweet innocent smile with no jagged teeth, big friendly eyes (no orange evil glow), rosy cheeks, ears relaxed, no scowl. A golden HALO floats above the head. He holds the blue gift out in both hands, offering it politely."
+    }
+  ]
+}

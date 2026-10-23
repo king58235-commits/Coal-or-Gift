@@ -1,0 +1,29 @@
+{
+  "base_prompt": "GAME ICON, transparent background (real alpha channel), no text, no watermark, ONE object centered, nothing cropped, square-ish composition with a little padding.\nART STYLE: match the attached reference's style exactly: Korean messenger-sticker / emoticon style, flat colors with at most one soft shade tone, thin uniform dark outline, no glossy realistic highlights, no texture. Cute, chunky, simple, readable at a very small size.",
+  "reference": [
+    "assets/_gen/chars_kr/goblin_a_idle.png"
+  ],
+  "out_dir": "assets/_gen/items_kr",
+  "jobs": [
+    {
+      "name": "gift_red",
+      "prompt": "A cute gift box: bright red box with a gold ribbon and a gold bow on top, seen from a slight front-top angle."
+    },
+    {
+      "name": "coal",
+      "prompt": "A lump of coal: a chunky rough black rock with 2-3 flat dark-grey facets and a few tiny glowing orange ember cracks."
+    },
+    {
+      "name": "heart_full",
+      "prompt": "A plump red heart (life icon), flat bright red with a small white highlight shape in the upper left."
+    },
+    {
+      "name": "heart_empty",
+      "prompt": "An empty life heart (a lost life): the same plump heart shape as a standard heart icon, filled completely with a SOLID flat dark blue-grey color, with a thin lighter-grey outline ring and one small pale highlight. The fill must be fully opaque everywhere: NO transparent hole, NO see-through area, NO blur."
+    },
+    {
+      "name": "snow_mound",
+      "prompt": "A round soft mound of white snow, like a fluffy dome snow pile: wide at the bottom and rounded on top, about 3 times as wide as it is tall, completely FULLY OPAQUE solid white fill with a pale-blue shade tone along the bottom, a couple of small snow clumps on the surface. The whole mound is one solid shape (no gaps, no transparent areas), landscape orientation."
+    }
+  ]
+}

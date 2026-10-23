@@ -1,0 +1,49 @@
+{
+  "base_prompt": "CHARACTER: a comically over-muscular elderly Santa. White hair, big full white beard, black sunglasses, shirtless. He wears ONLY a red Santa hat with white fur trim, the sunglasses, red pants with white fur cuffs, and black boots. No jacket, no vest, no belt, no gloves, no wristbands.\nSTRICT CONSISTENCY: exactly the same character as the attached reference (same face, beard, hair, sunglasses, body proportions, skin tone, colors, outline thickness, shading style). Same camera: FULL BODY visible from the top of the hat to the soles of the boots, nothing cropped, same overall scale as the reference, feet at the bottom of the canvas. Portrait orientation about 2:3.\nHands are EMPTY (no gift, no coal, no towel, no props). Transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, no other characters.\nUnless the pose says 'facing the viewer', the character faces toward the RIGHT side of the image, three-quarter view, like the reference.",
+  "reference": [
+    "assets/_gen/santa/_reference_idle.png"
+  ],
+  "out_dir": "assets/_gen/santa",
+  "jobs": [
+    {
+      "name": "windup",
+      "prompt": "Wind-up pose just BEFORE throwing a ball overhead. The torso leans BACK and twists away from the target, weight on the back leg. His RIGHT-side arm (the arm on the right side of the image) is cocked far BACK: the upper arm held out horizontally behind the shoulder with the elbow sharply bent and the clenched fist raised behind and above the back of his head. The OTHER arm points forward toward the right at the target for balance. Intense focused smirk. The empty background must be plain and empty (do NOT draw any checkerboard pattern, grid or fake-transparency pattern)."
+    },
+    {
+      "name": "release_fwd",
+      "prompt": "The moment of releasing a throw. Body lunging forward to the right, front knee bent. Throwing arm fully extended straight forward (to the right, roughly horizontal) with the fingers just opened, the other arm swung back. Fierce grin."
+    },
+    {
+      "name": "release_up",
+      "prompt": "The moment of releasing a throw upward. Throwing arm extended diagonally UP to the right (about 45 to 60 degrees upward) with the fingers just opened, body leaning forward and stretching up, the other arm swung back."
+    },
+    {
+      "name": "flex_1",
+      "prompt": "Facing the viewer, classic front double-biceps flex: both fists up beside the head, chest out, wide stance, huge confident grin."
+    },
+    {
+      "name": "flex_2",
+      "prompt": "Classic side-chest bodybuilding pose, turned toward the right in three-quarter view, one arm bent across the chest, the other fist clenched by the hip, smug smile."
+    },
+    {
+      "name": "pump_1",
+      "prompt": "Triumphant pose: one fist pumped high overhead (the right-side arm up), the other hand on the hip, mouth open in a victorious shout, facing the viewer in three-quarter view."
+    },
+    {
+      "name": "pump_2",
+      "prompt": "Victory pose: BOTH fists raised high overhead, mouth open laughing 'ho ho ho', slight backward lean of the chest, facing the viewer."
+    },
+    {
+      "name": "dance_1",
+      "prompt": "Cool deadpan dance move: torso tilted toward the left, his RIGHT-side arm swung out WIDE horizontally to the right with an open hand (like swinging a towel), the left arm bent in front of the chest, one knee slightly bent, chin up, expressionless cool face behind the sunglasses."
+    },
+    {
+      "name": "dance_2",
+      "prompt": "The 'freeze' pose of the same dance: facing the viewer, standing firm and upright, arms down at the sides with fists slightly clenched and biceps flexed, chest puffed, chin slightly raised, deadpan cool."
+    },
+    {
+      "name": "dance_3",
+      "prompt": "Exact mirror of a dance move: torso tilted toward the right, his LEFT-side arm swung out wide horizontally to the left with an open hand, the right arm bent in front of the chest, one knee slightly bent, chin up, expressionless cool face behind the sunglasses."
+    }
+  ]
+}

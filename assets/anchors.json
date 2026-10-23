@@ -1,0 +1,6 @@
+{
+  "sprites/santa/idle":        { "hand": [0.72, 0.19] },
+  "sprites/santa/windup":      { "hand": [0.23, 0.13] },
+  "sprites/santa/release_fwd": { "hand": [0.81, 0.24] },
+  "sprites/santa/release_up":  { "hand": [0.80, 0.10] }
+}

@@ -1,0 +1,101 @@
+{
+  "base_prompt": "SPRITE for a comedic 2D game, full body, transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped (head to feet fully visible), centered, portrait about 2:3.\nART STYLE (must be identical across all characters): Korean messenger-sticker / emoticon style (like KakaoTalk or LINE friends): very simple chubby rounded character about 2 heads tall, minimal face, flat colors with at most one soft shade tone, thin uniform outline in a slightly darker tone of the fill color, almost no detail, no glossy highlights, no fabric wrinkles. It must look hand-drawn by an illustrator, NOT like an AI render.\nCONSISTENCY: when an attached reference image of the same character is given, keep the SAME character (face, hair, outfit, colors, proportions, outline) and only change what the instruction says. Do not add props that are not mentioned.",
+  "out_dir": "assets/_gen/chars_kr",
+  "jobs": [
+    {
+      "name": "kid_good_b_idle",
+      "reference": [
+        "assets/_gen/chars/kid_good_b_idle.png",
+        "assets/_gen/chars_kr/kid_good_a_idle.png"
+      ],
+      "prompt": "Reference image 1 is the CHARACTER design (a different good kid: brown pigtail braids, freckles, yellow puffy coat, purple beanie with pom-pom, green scarf, orange mittens, brown boots, golden halo). Reference image 2 shows the exact ART STYLE to use. Draw character 1 in the style of image 2, arms raised in joyful expectation, big happy smile, golden halo above the head."
+    },
+    {
+      "name": "thug_b_idle",
+      "reference": [
+        "assets/_gen/chars/thug_b_idle.png",
+        "assets/_gen/chars_kr/thug_a_idle.png"
+      ],
+      "prompt": "Reference image 1 is the CHARACTER design (a different bad kid: black bandana, spiky ORANGE mohawk, spiked collar, dark green hooded jacket with studs, torn black jeans, black boots, a nasty grin with a missing tooth, nail bat on one shoulder, other hand a clenched fist). Reference image 2 shows the exact ART STYLE to use. Draw character 1 in the style of image 2. Make the menace unmistakable: thick slanted angry eyebrows, narrowed glowing red eyes, small fangs."
+    },
+    {
+      "name": "goblin_b_idle",
+      "reference": [
+        "assets/_gen/chars/goblin_b_idle.png",
+        "assets/_gen/chars_kr/goblin_a_idle.png"
+      ],
+      "prompt": "Reference image 1 is the CHARACTER design (a different goblin kid: sickly yellow-green skin, huge drooping pointed ears with a small hole in one, bulging orange eyes, hooked nose, white hair strands, ragged dark-blue vest and shorts, clutching a stolen blue gift with a silver ribbon). Reference image 2 shows the exact ART STYLE to use. Draw character 1 in the style of image 2 with a mischievous greedy grin and a few jagged teeth. IMPORTANT: the previous attempt was far too detailed and realistic. This time it MUST be as simple and cute as the approved goblin in image 2: a round chubby body about 2 heads tall, big simple head, flat green skin with NO warts, spots or skin texture, simple flat-color ears, simple shapes, thin uniform outline, no wrinkles. Keep only the key identity points: yellow-green skin, huge drooping ears, orange eyes, white hair tufts, dark-blue vest and shorts, the blue gift."
+    },
+    {
+      "name": "yeti_idle",
+      "reference": [
+        "assets/_gen/chars/yeti_idle.png",
+        "assets/_gen/chars_kr/goblin_a_idle.png"
+      ],
+      "prompt": "Reference image 1 is the CHARACTER design (a giant menacing yeti: white and pale-blue fur, blue-grey face, glowing yellow eyes with red pupils, big fangs, two icy-blue horns, big fists with blue claws). Reference image 2 shows the exact ART STYLE to use. Draw the yeti in the style of image 2: a big round fluffy white blob-like body with a simple scalloped fur outline (NO individual fur strands), still intimidating with angry brows and fangs but cute-chunky, about 2 heads tall, standing facing the viewer, arms hanging at the sides."
+    },
+    {
+      "name": "kid_good_a_idle_2",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_a_idle.png"
+      ],
+      "prompt": "Same kid waving: one arm raised high waving the mitten, the other arm raised lower to the side, still smiling, halo above the head."
+    },
+    {
+      "name": "kid_good_a_happy",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_a_idle.png"
+      ],
+      "prompt": "Overjoyed after receiving a present: eyes closed in happy arcs, mouth wide open laughing, both arms thrown straight up, little hop (feet slightly off the ground). Halo kept above the head."
+    },
+    {
+      "name": "kid_good_a_cry",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_a_idle.png"
+      ],
+      "prompt": "Heartbroken because someone threw a lump of COAL at him: face, hat, scarf and coat smudged with black coal soot, eyes squeezed shut with big streams of tears, mouth wide open wailing, both mittens rubbing the eyes. NO halo anymore."
+    },
+    {
+      "name": "thug_a_smug",
+      "reference": [
+        "assets/_gen/chars_kr/thug_a_idle.png"
+      ],
+      "prompt": "Cackling triumphantly because he got a free present: head thrown back, eyes squeezed shut, mouth wide open in a nasty laugh showing fangs, one fist raised, still holding the nail bat on the shoulder with the other hand."
+    },
+    {
+      "name": "thug_a_hit",
+      "reference": [
+        "assets/_gen/chars_kr/thug_a_idle.png"
+      ],
+      "prompt": "Just got hit in the face with a lump of coal: whole face smeared black with soot, eyes are dizzy spiral swirls, tongue out, stumbling backwards, a few small yellow stars circling above the head, bat drooping."
+    },
+    {
+      "name": "thug_a_converted",
+      "reference": [
+        "assets/_gen/chars_kr/thug_a_idle.png"
+      ],
+      "prompt": "Reformed into a GOOD kid: a sweet smile with no fangs, relaxed eyebrows, big friendly sparkling eyes (no red), rosy cheeks. A golden HALO floats above the red mohawk. The bat is gone, both hands waving happily. Keep bandana, mohawk and jacket so the contrast is funny."
+    },
+    {
+      "name": "goblin_a_smug",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_a_idle.png"
+      ],
+      "prompt": "Cackling with glee, hugging the stolen red gift tightly: head thrown back, eyes squeezed shut, mouth wide open in a shrieking laugh with jagged teeth, ears perked up."
+    },
+    {
+      "name": "goblin_a_hit",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_a_idle.png"
+      ],
+      "prompt": "Just got hit in the face with a lump of coal: face smeared black with soot, eyes are dizzy white spirals, tongue out, stumbling, a few small yellow stars circling above the head, ears drooping, still clutching the red gift."
+    },
+    {
+      "name": "goblin_a_converted",
+      "reference": [
+        "assets/_gen/chars_kr/goblin_a_idle.png"
+      ],
+      "prompt": "Reformed into a GOOD little goblin: a sweet innocent smile with no jagged teeth, big friendly eyes, rosy cheeks, ears relaxed. A golden HALO floats above the head. He holds the red gift out in both hands, offering it politely."
+    }
+  ]
+}

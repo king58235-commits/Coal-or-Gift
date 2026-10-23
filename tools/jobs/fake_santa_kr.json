@@ -1,0 +1,34 @@
+{
+  "base_prompt": "SPRITE for a comedic 2D game, full body, transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped (head to feet fully visible), centered, portrait about 2:3.\nTwo references are attached. Reference 1 is the muscular Santa (the CHARACTER identity to keep: white hair, big full white beard, black sunglasses, bare muscular chest with visible abs, red pants with white fur cuffs, black boots, NO belt, NO shirt). Reference 2 shows the exact ART STYLE to use: Korean messenger-sticker / emoticon style, very simple chubby rounded character about 2 heads tall, flat colors with at most one soft shade tone, thin uniform outline, almost no detail, no glossy highlights. Redraw the Santa from reference 1 in the style of reference 2: a chubby chibi SANTA with the same identity points (white beard, sunglasses, red pants, boots), whose muscles are drawn as simple rounded cartoon bumps (big round arms, simple pecs and a simple six-pack drawn with a few lines) so he is still clearly a bodybuilder. He wears a funny DISGUISE instead of the red Santa hat (NO red Santa hat). Hands are empty.",
+  "reference": [
+    "assets/_gen/santa/_reference_idle.png",
+    "assets/_gen/chars_kr/goblin_a_idle.png"
+  ],
+  "out_dir": "assets/_gen/fake_kr",
+  "jobs": [
+    {
+      "name": "fake_kid_idle",
+      "prompt": "Disguise as a little kid: a small blue knitted kid's beanie with a yellow pom-pom. Standing sneakily with his hands clasped behind his back and a smug little whistling smile."
+    },
+    {
+      "name": "fake_kid_flex",
+      "prompt": "Disguise as a little kid: a small blue knitted kid's beanie with a yellow pom-pom. Caught flexing: front double-biceps pose, big grin."
+    },
+    {
+      "name": "fake_thug_idle",
+      "prompt": "Disguise as a street punk: a red bandana on the forehead and a cheap fake spiky red mohawk wig. Standing trying to look tough: arms crossed, chin up, grumpy face behind the sunglasses."
+    },
+    {
+      "name": "fake_thug_flex",
+      "prompt": "Disguise as a street punk: a red bandana and a cheap fake spiky red mohawk wig. Caught flexing: front double-biceps pose, big grin."
+    },
+    {
+      "name": "fake_goblin_idle",
+      "prompt": "Disguise as a goblin: a ragged brown cloth cap and obviously FAKE huge green pointed goblin ears stuck to the sides of the head. Standing hunched in a mischievous goblin pose, hands curled like claws."
+    },
+    {
+      "name": "fake_goblin_flex",
+      "prompt": "Disguise as a goblin: a ragged brown cloth cap and obviously FAKE huge green pointed ears. Caught flexing: front double-biceps pose, big grin."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# 生圖的原始輸出與審查用圖(體積大、可由 tools/jobs 重新產生);只保留重新生圖需要的「核准參考圖」
+assets/_codex_test/
+assets/_gen/*
+!assets/_gen/santa/
+assets/_gen/santa/*
+!assets/_gen/santa/_reference_idle.png
+!assets/_gen/chars_kr/
+assets/_gen/chars_kr/*
+!assets/_gen/chars_kr/*_idle.png
+assets/_gen/chars_kr/fake_*
+
+# 本機工具設定(只保留預覽伺服器設定)
+.claude/*
+!.claude/launch.json
+
+# 其他
+__pycache__/
+*.pyc
+Thumbs.db
+.DS_Store

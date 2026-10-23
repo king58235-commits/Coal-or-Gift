@@ -1,0 +1,33 @@
+{
+  "base_prompt": "SPRITE for a comedic browser game, full body, transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped (hat to boots fully visible, feet at the bottom of the canvas), centered, portrait about 2:3.\nThe attached reference is the APPROVED muscular Santa: keep EXACTLY the same character and rendering style (face, white hair, big full white beard, black sunglasses, bare muscular chest, red pants with white fur cuffs, black boots, thick dark navy outline, semi-realistic cel shading). The new image is the SAME Santa, but wearing a funny cheap DISGUISE instead of his red Santa hat (so NO red Santa hat). His huge shirtless muscular body and white beard and sunglasses remain obvious. Hands are empty.",
+  "reference": [
+    "assets/_gen/santa/_reference_idle.png"
+  ],
+  "out_dir": "assets/_gen/chars_kr",
+  "jobs": [
+    {
+      "name": "fake_kid_idle",
+      "prompt": "Disguise as a little kid: a small blue knitted kid's beanie with a yellow pom-pom on his head (no Santa hat). Standing in a sneaky innocent 'I am just a kid' pose with the hands clasped behind the back, a smug little whistling smile. VERY IMPORTANT: keep EXACTLY the same extremely muscular physique as the reference: huge pecs, a defined six-pack with deep ab lines, a tight narrow waist, NO belly fat, NO belly, NO chest hair. NO belt, NO buckle: bright red pants with white fur cuffs and black boots exactly like the reference."
+    },
+    {
+      "name": "fake_kid_flex",
+      "prompt": "Disguise as a little kid: a small blue knitted kid's beanie with a yellow pom-pom. Caught flexing: front double-biceps pose, huge grin."
+    },
+    {
+      "name": "fake_thug_idle",
+      "prompt": "Disguise as a street punk: a red bandana on the forehead and a cheap fake spiky red mohawk wig. Standing trying to look tough: arms crossed, chin up."
+    },
+    {
+      "name": "fake_thug_flex",
+      "prompt": "Disguise as a street punk: red bandana and a cheap fake spiky red mohawk wig. Caught flexing: front double-biceps pose, huge grin."
+    },
+    {
+      "name": "fake_goblin_idle",
+      "prompt": "Disguise as a goblin: a ragged brown cloth cap and obviously FAKE huge green pointed goblin ears stuck to the sides of the head. Standing hunched in a mischievous 'goblin' pose, hands curled like claws."
+    },
+    {
+      "name": "fake_goblin_flex",
+      "prompt": "Disguise as a goblin: ragged brown cloth cap and obviously FAKE huge green pointed ears. Caught flexing: front double-biceps pose, huge grin. IMPORTANT: NO belt, NO waistband accessory, NO buckle at all (the reference has none): the bright red pants go straight up to the bare belly exactly like the reference, with white fur cuffs at the ankles and black boots."
+    }
+  ]
+}

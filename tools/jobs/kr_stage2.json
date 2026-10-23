@@ -1,0 +1,76 @@
+{
+  "base_prompt": "SPRITE for a comedic 2D game, full body, transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, ONE character, nothing cropped (head to feet fully visible), centered, portrait about 2:3.\nART STYLE (must be identical across all characters): Korean messenger-sticker / emoticon style (like KakaoTalk or LINE friends): very simple chubby rounded character about 2 heads tall, minimal face, flat colors with at most one soft shade tone, thin uniform outline in a slightly darker tone of the fill color, almost no detail, no glossy highlights, no fabric wrinkles. It must look hand-drawn by an illustrator, NOT like an AI render.\nCONSISTENCY: when an attached reference image of the same character is given, keep the SAME character (face, hair, outfit, colors, proportions, outline) and only change what the instruction says. Do not add props that are not mentioned.",
+  "out_dir": "assets/_gen/chars_kr",
+  "jobs": [
+    {
+      "name": "kid_good_b_idle_2",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_b_idle.png"
+      ],
+      "prompt": "Same kid waving: one arm raised high waving the mitten, the other arm raised lower to the side, still smiling, halo above the head."
+    },
+    {
+      "name": "kid_good_b_happy",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_b_idle.png"
+      ],
+      "prompt": "Overjoyed after receiving a present: eyes closed in happy arcs, mouth wide open laughing, both arms thrown straight up, little hop (feet slightly off the ground). Halo kept above the head."
+    },
+    {
+      "name": "kid_good_b_cry",
+      "reference": [
+        "assets/_gen/chars_kr/kid_good_b_idle.png"
+      ],
+      "prompt": "Heartbroken because someone threw a lump of COAL at her: face, hat, scarf and coat smudged with black coal soot, eyes squeezed shut with big streams of tears, mouth wide open wailing, both mittens rubbing the eyes. NO halo anymore."
+    },
+    {
+      "name": "thug_b_smug",
+      "reference": [
+        "assets/_gen/chars_kr/thug_b_idle.png"
+      ],
+      "prompt": "Cackling triumphantly because he got a free present: head thrown back, eyes squeezed shut, mouth wide open in a nasty laugh showing fangs, one fist raised, still holding the nail bat on the shoulder with the other hand."
+    },
+    {
+      "name": "thug_b_hit",
+      "reference": [
+        "assets/_gen/chars_kr/thug_b_idle.png"
+      ],
+      "prompt": "Just got hit in the face with a lump of coal: whole face smeared black with soot, eyes are dizzy spiral swirls, tongue out, stumbling backwards, a few small yellow stars circling above the head, bat drooping."
+    },
+    {
+      "name": "thug_b_converted",
+      "reference": [
+        "assets/_gen/chars_kr/thug_b_idle.png"
+      ],
+      "prompt": "Reformed into a GOOD kid: a sweet smile with no fangs and no missing-tooth grin, relaxed eyebrows, big friendly sparkling eyes (no red), rosy cheeks. A golden HALO floats above the orange mohawk. The bat is gone, both hands waving happily. Keep bandana, mohawk and jacket so the contrast is funny."
+    },
+    {
+      "name": "yeti_roar",
+      "reference": [
+        "assets/_gen/chars_kr/yeti_idle.png"
+      ],
+      "prompt": "Roaring: both arms raised up and out, mouth stretched wide open in a thunderous roar showing every fang, eyes glaring."
+    },
+    {
+      "name": "yeti_eat",
+      "reference": [
+        "assets/_gen/chars_kr/yeti_idle.png"
+      ],
+      "prompt": "Chewing happily on a swallowed present: cheeks puffed out and stuffed, a gold ribbon and a scrap of red wrapping paper hanging from the corner of the mouth, eyes half-closed in satisfaction, one hand patting the belly."
+    },
+    {
+      "name": "yeti_hit",
+      "reference": [
+        "assets/_gen/chars_kr/yeti_idle.png"
+      ],
+      "prompt": "Getting hit by lumps of coal: grimacing in pain with eyes squeezed shut and teeth clenched, leaning slightly backwards, black coal-soot smudges scattered on the white fur of the chest and face."
+    },
+    {
+      "name": "yeti_dizzy",
+      "reference": [
+        "assets/_gen/chars_kr/yeti_idle.png"
+      ],
+      "prompt": "Knocked out and dizzy: eyes as spiral swirls, tongue hanging out, swaying with arms limp, small yellow stars circling above the head, lots of black coal-soot smudges on the fur."
+    }
+  ]
+}
