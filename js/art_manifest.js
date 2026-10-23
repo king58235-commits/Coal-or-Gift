@@ -54,7 +54,8 @@ window.ART_MANIFEST = {
     "assets/sprites/yeti/idle.png",
     "assets/sprites/yeti/roar.png",
     "assets/ui/heart_empty.png",
-    "assets/ui/heart_full.png"
+    "assets/ui/heart_full.png",
+    "assets/ui/logo.png"
   ],
   "anchors": {
     "sprites/santa/idle": {

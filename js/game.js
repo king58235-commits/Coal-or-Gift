@@ -1054,12 +1054,18 @@ function drawOverlays() {
 
 function drawTitle() {
   ctx.fillStyle = 'rgba(5,8,25,.55)'; ctx.fillRect(0, 0, W, H);
-  ctx.save(); ctx.translate(W / 2, 130); ctx.rotate(Math.sin(time * 2) * 0.02);
-  outlineText('煤炭 or 禮物', 0, 0, 92, '#ffe066', '#7a1020');
-  ctx.restore();
-  drawItem(ctx, 'gift', 150, 130 + Math.sin(time * 3) * 6, 2.2, -0.3);
-  drawItem(ctx, 'coal', 810, 130 + Math.cos(time * 3) * 6, 2.2, 0.3);
-  outlineText('COAL  or  GIFT', W / 2, 200, 28, '#bfe3ff', '#10204a');
+  // 標題:有 Logo 美術字就用圖,否則退回文字
+  if (Art.has('ui/logo')) {
+    const lg = Art.img('ui/logo'), lw = 560, lh = lw * lg.height / lg.width;
+    ctx.save(); ctx.translate(W / 2, 118); ctx.rotate(Math.sin(time * 2) * 0.02);
+    ctx.drawImage(lg, -lw / 2, -lh / 2, lw, lh); ctx.restore();
+  } else {
+    ctx.save(); ctx.translate(W / 2, 130); ctx.rotate(Math.sin(time * 2) * 0.02);
+    outlineText('Coal-or-Gift', 0, 0, 84, '#ffe066', '#7a1020');
+    ctx.restore();
+  }
+  drawItem(ctx, 'gift', 120, 130 + Math.sin(time * 3) * 6, 2.2, -0.3);
+  drawItem(ctx, 'coal', 840, 130 + Math.cos(time * 3) * 6, 2.2, 0.3);
   const lines = [
     ['乖孩子 → 送禮物', '#9bf6a8'],
     ['壞孩子 → 砸煤炭', '#ff9aa2'],

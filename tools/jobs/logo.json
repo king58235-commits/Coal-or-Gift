@@ -1,0 +1,10 @@
+{
+  "base_prompt": "GAME TITLE LOGO, wide landscape (about 3:1), transparent background (real alpha channel), no other text, no watermark, nothing cropped, centered with a little padding.\nThe logo must spell EXACTLY this text, character for character, in English: Coal-or-Gift   (that is: C-o-a-l, hyphen, o-r, hyphen, G-i-f-t; keep the two hyphens). Check the spelling carefully; it is a single line.\nART STYLE: match the attached reference's Korean messenger-sticker / casual-mobile-game look: chunky rounded bubble letters, thick uniform dark outline, flat colors with at most one soft shade tone, cute and playful, funny Christmas mood. Big and bold, readable at small sizes.",
+  "reference": ["assets/_gen/chars_kr/goblin_a_idle.png"],
+  "out_dir": "assets/_gen/logo",
+  "jobs": [
+    { "name": "logo_a", "prompt": "Letter design: the word 'Coal' is made of black rocky coal-lump letters with glowing orange ember cracks and a few small snow caps on top; 'or' is smaller, in white with a red outline, sitting between two small hyphens; the word 'Gift' is bright red like wrapped presents with a gold ribbon cross over the letters and a little gold bow on top of the G. The two big words are the same height." },
+    { "name": "logo_b", "prompt": "Letter design: 'Coal' in dark charcoal-grey puffy letters with orange sparks, 'Gift' in shiny candy-red letters with white polka dots and a green-and-gold ribbon; the small 'or' in the middle is on a little golden star badge; hyphens drawn as candy-cane segments. Snow piled on the tops of the letters. Slightly bouncy baseline (letters gently jumping)." },
+    { "name": "logo_c", "prompt": "Letter design: both big words in the same chunky bubble style: 'Coal' black with a faint ember glow, 'Gift' red-and-white striped like a candy cane; small 'or' in gold; hyphens as small gold ribbons. A tiny black lump of coal and a tiny red gift box are tucked in front of the letters at the bottom corners. Snow dusting on the tops." }
+  ]
+}
