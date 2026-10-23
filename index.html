@@ -43,10 +43,10 @@
   .eyebrow::before { left: -12px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 30% 50%); }
   .eyebrow::after { right: -12px; clip-path: polygon(0 0, 100% 0, 70% 50%, 100% 100%, 0 100%); }
   /* 標題 Logo:優先用美術字圖片 assets/ui/logo.png,載入失敗才顯示下面的 CSS 文字版 */
-  .logo { margin: 14px 0 0; line-height: 1; animation: wob 3.2s ease-in-out infinite; }
-  .logo img { display: block; margin: 0 auto; width: min(780px, 92vw); height: auto; filter: drop-shadow(0 8px 0 rgba(26,16,48,.55)) drop-shadow(0 14px 22px rgba(0,0,0,.5)); }
+  .logo { margin: 16px 0 0; line-height: 1; animation: wob 3.2s ease-in-out infinite; }
+  .logo img { display: block; margin: 0 auto; width: min(780px, 92vw); height: auto; filter: drop-shadow(0 6px 0 rgba(26,16,48,.55)); }   /* 平面風:只用不模糊的硬邊陰影 */
   .logo .fb { display: none; font-family: "Impact","Arial Black","Segoe UI Black",system-ui,sans-serif; font-weight: 900; font-size: clamp(48px, 10.5vw, 116px); letter-spacing: .01em;
-              -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; filter: drop-shadow(0 7px 0 rgba(26,16,48,.6)) drop-shadow(0 14px 20px rgba(0,0,0,.45)); }
+              -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; filter: drop-shadow(0 6px 0 rgba(26,16,48,.6)); }
   .logo.noimg img { display: none; } .logo.noimg .fb { display: block; }
   .logo .fb .c { color: #2e2e38; text-shadow: 0 0 18px rgba(255,120,30,.9); }
   .logo .fb .o { font-size: .5em; color: #ffd166; margin: 0 .08em; }
