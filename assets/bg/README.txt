@@ -9,7 +9,7 @@
 
 怎麼啟用:
 1. 把圖片放進這個資料夾,例如 bg-1.jpg、bg-2.jpg ...
-2. 打開 js/entry.js,在最上面的 BG_IMAGES 陣列加上檔名(可以刪掉三張 placeholder):
+2. 打開 js/entry.js,在最上面的 BG_IMAGES 陣列加上檔名(目前放的是 12 張生成的場景圖,想換圖就改這個清單):
      const BG_IMAGES = [
        'assets/bg/bg-1.jpg',
        { src: 'assets/bg/bg-2.jpg', pos: '30% 50%' },   // pos 可選:手機直式時畫面對準的位置
