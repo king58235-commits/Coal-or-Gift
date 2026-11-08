@@ -39,6 +39,8 @@ window.ART_MANIFEST = {
     "assets/sprites/santa/pump_2.png",
     "assets/sprites/santa/release_fwd.png",
     "assets/sprites/santa/release_up.png",
+    "assets/sprites/santa/sad_1.png",
+    "assets/sprites/santa/sad_2.png",
     "assets/sprites/santa/windup.png",
     "assets/sprites/thug_a/converted.png",
     "assets/sprites/thug_a/hit.png",

@@ -1,0 +1,17 @@
+{
+  "base_prompt": "CHARACTER: a comically over-muscular elderly Santa. White hair, big full white beard, black sunglasses, shirtless. He wears ONLY a red Santa hat with white fur trim, the sunglasses, red pants with white fur cuffs, and black boots. No jacket, no vest, no belt, no gloves, no wristbands.\nSTRICT CONSISTENCY: exactly the same character as the attached reference (same face, beard, hair, sunglasses, body proportions, skin tone, colors, outline thickness, shading style). Same camera: FULL BODY visible from the top of the hat to the soles of the boots, nothing cropped, same overall scale as the reference, feet at the bottom of the canvas. Portrait orientation about 2:3.\nHands are EMPTY (no gift, no coal, no towel, no props). Transparent background (real alpha channel), no ground shadow, no glow, no text, no watermark, no other characters.\nUnless the pose says 'facing the viewer', the character faces toward the RIGHT side of the image, three-quarter view, like the reference.\nMOOD: this is a SAD / defeated version of the same Santa for a game-over screen. Keep the muscular body, but the posture and face must clearly read as heartbroken. Sunglasses stay on; show sadness through the downturned mouth, trembling lip, drooping shoulders and tears running out from under the sunglasses.",
+  "reference": [
+    "assets/_gen/santa/_reference_idle.png"
+  ],
+  "out_dir": "assets/_gen/santa_sad",
+  "jobs": [
+    {
+      "name": "sad_1",
+      "prompt": "Facing the viewer, standing but slumped in defeat: head hanging down and tilted slightly, shoulders drooping, both arms hanging limp at his sides with loose open hands, knees slightly bent, a downturned frowning mouth, one big tear rolling down each cheek from beneath the sunglasses. Exactly two arms and two legs."
+    },
+    {
+      "name": "sad_2",
+      "prompt": "Facing the viewer, bawling: head tilted back a little, mouth wide open wailing, thick streams of tears flowing from beneath the sunglasses, one hand wiping under the sunglasses and the other arm hanging down, shoulders hunched, knees bent inward. Exactly two arms and two legs."
+    }
+  ]
+}

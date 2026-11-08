@@ -121,6 +121,7 @@ const Art = (() => {
     }
     if (pose === 'flex') return firstOf(base, [['flex_1', 'flex_2'][pingpong(t, 2.5, 2)], 'flex_1', 'idle']);
     if (pose === 'pump') return firstOf(base, [['pump_1', 'pump_2'][pingpong(t, 5, 2)], 'pump_1', 'dance_2', 'flex_1']);
+    if (pose === 'sad') return firstOf(base, [['sad_1', 'sad_2'][pingpong(t, 2.2, 2)], 'sad_1', 'idle']);   // 遊戲結束:啜泣
     // dance / disco:3 張舞姿來回播放 1-2-3-2
     const d = ['dance_1', 'dance_2', 'dance_3'], i = pingpong(t + (pose === 'disco' ? 0.15 : 0), 5, 3);
     return firstOf(base, [d[i], 'dance_2', 'flex_1', 'idle']);
@@ -150,6 +151,7 @@ const Art = (() => {
     if (pose === 'dance') { sway = Math.sin(t * 6) * 0.05; bob = -Math.abs(Math.sin(t * 6)) * 12; }
     else if (pose === 'disco') { sway = Math.sin(t * 5) * 0.04; bob = -Math.abs(Math.sin(t * 10)) * 6; }
     else if (pose === 'pump') bob = -Math.abs(Math.sin(t * 9)) * 14;
+    else if (pose === 'sad') { bob = Math.abs(Math.sin(t * 4.4)) * -3; sway = Math.sin(t * 2.2) * 0.012; }   // 抽泣的小幅顫動
     else bob = Math.sin(t * 2.5) * 2;
     const TT = o.throwT;
     if (pose === 'throw' && TT != null && TT >= 0) {

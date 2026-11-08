@@ -742,7 +742,7 @@ function update(dt) {
     if (introT >= INTRO_END) startGame();
     return;
   }
-  if (state === 'over') { overT += dt; santa.pose = 'pump'; updateClones(dt); updateTargets(dt); return; }
+  if (state === 'over') { overT += dt; santa.pose = 'sad'; updateClones(dt); updateTargets(dt); return; }
   if (paused !== audioPaused) { audioPaused = paused; Sfx.setPaused(paused); }   // 暫停時音樂(與節拍時鐘)一起停
   if (paused) return;
 
@@ -878,20 +878,22 @@ function drawTarget(t) {
   ctx.restore();
 }
 
+const OVER_SANTA_X = 860;
 function drawFigures() {
   const list = [];
-  for (const c of clones) {
+  const over = state === 'over';   // 結算:分身退場,主角滑到右側哭(置中的話臉會被排行榜蓋住)
+  for (const c of over ? [] : clones) {
     const [x, y, s] = CLONE_SLOTS[c.slot];
     list.push({ y, f: () => {
       const sc = s * easeOutBack(c.pop);
       if (sc <= 0.01) return;
-      drawSanta(ctx, { x, y, s: sc, dir: x < 480 ? 1 : -1, t: c.t, pose: c.pose, pal: c.pal, bf: 1.25 + 0.15 * Math.sin(c.t * 8), glint: true });
+      drawSanta(ctx, { x, y, s: sc, dir: x < 480 ? 1 : -1, t: c.t, pose: state === 'over' ? 'sad' : c.pose, pal: c.pal, bf: 1.25 + 0.15 * Math.sin(c.t * 8), glint: true });
     } });
   }
   list.push({ y: santa.y + 1, f: () => {
     const holding = santa.pose === 'throw' ? santa.item : null;
     drawSanta(ctx, {
-      x: santa.x, y: santa.y, s: santa.s, dir: santa.dir, t: santa.t, pose: santa.pose,
+      x: over ? lerp(santa.x, OVER_SANTA_X, smooth(overT / 0.8)) : santa.x, y: santa.y, s: santa.s, dir: over ? 1 : santa.dir, t: santa.t, pose: santa.pose,
       aim: santaAim(), throwT: santa.throwT, item: holding, sack: true,
       bf: 1 + Math.min(0.5, G.combo * 0.015) + santa.flexKick * 0.35 + (santa.throwT > 0.2 && santa.throwT < 0.7 ? 0.45 : 0), glint: G.combo >= 10,
     });
@@ -1269,7 +1271,7 @@ function drawIntro() {
   } else if (st === 2) {
     ctx.fillStyle = `rgba(255,255,255,${clamp((lt - 1.3) / 0.2, 0, 1)})`; ctx.fillRect(0, 0, W, H);   // 轉場到遊戲
   }
-  ctx.globalAlpha = 0.6; outlineText('點擊跳過', W - 70, H - 20, 16, '#fff', '#1a1030'); ctx.globalAlpha = 1;
+  ctx.globalAlpha = 0.6; outlineText('點擊跳過', W - 70, 24, 16, '#fff', '#1a1030'); ctx.globalAlpha = 1;   // 右下角有首頁/音效鈕,所以放右上
 }
 
 function drawOver() {
