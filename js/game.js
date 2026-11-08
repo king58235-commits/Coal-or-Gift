@@ -178,8 +178,10 @@ function toGame(e) {
   const r = canvas.getBoundingClientRect();
   return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
 }
-function setItem(k) {
-  if (santa.item === k) return;
+// 雪怪戰期間道具由系統隨機切換,玩家不能手動換
+const itemLocked = () => !!yeti && yeti.phase === 'fight';
+function setItem(k, force) {
+  if (santa.item === k || (itemLocked() && !force)) return;
   santa.item = k; Sfx.swap();
 }
 function toggleItem() { setItem(santa.item === 'gift' ? 'coal' : 'gift'); }
@@ -250,7 +252,7 @@ function startIntro() {
 function startGame() {
   resetGame();
   state = 'play'; paused = false;
-  Sfx.click();
+  Sfx.click(); Sfx.music('calm');
   say('Ho Ho Ho! 發禮物囉!');
 }
 
@@ -293,7 +295,7 @@ function impact(x, y, kind, wrong) {
   // 擬聲字放在目標頭上偏一側,不要蓋住目標本身的受擊動作
   addPow(x + 26, y - 40, wrong ? 'OOPS!' : coal ? 'BAM!' : 'POP!', wrong ? '#6c757d' : coal ? '#ff7b00' : '#ff4d6d', 44);
 }
-let lastThrow = -9;
+let lastThrow = -9, audioPaused = false;
 
 function santaShoulder() { return { x: santa.x + 72 * santa.s * santa.dir, y: santa.y - 176 * santa.s }; }
 function santaAim() {
@@ -320,6 +322,8 @@ function throwAt(x, y) {
     // 短促直線飛行(不走拋物線):出手瞬間就「砰」地射過去
     kind: santa.item, tx: x, ty: y, delay: THROW_DUR * 0.32, t: 0, dur: 0.05 + d / 9000,
     x0: 0, y0: 0, x: -999, y: -999, size: 1, rot: 0, spin: rand(-10, 10), started: false,
+    // 雪怪戰:弱點與節拍以「出手那一刻」為準,不然飛行時間會讓弱點在半空中過期
+    spot: yeti && yeti.spot, beat: yeti && yetiBeat(yeti),
   });
   Sfx.throw();
 }
@@ -483,7 +487,7 @@ function endGame() {
   projectiles.length = 0;                // 已飛出的投擲物不再落地,避免結算後分數又變動
   G.rank = Scores.add(G.score, G.maxCombo, G.elapsed);   // 寫入本機排行榜(前 5 名)
   best = Scores.best();
-  Sfx.gameover();
+  Sfx.stopMusic(); Sfx.gameover();
 }
 
 function updateTargets(dt) {
@@ -522,37 +526,87 @@ function updateTargets(dt) {
 }
 
 // ---------------- 雪怪 ----------------
+// 雪怪戰:音樂節拍每 2 拍為一個回合 —— 道具隨機換一次、雪怪身上亮一個弱點。
+// 煤炭打弱點重傷(接近收尾拍更痛),打身體只有 1 點;禮物丟到雪怪會餵牠回血。
+const YETI = {
+  time: 15, hpBase: 30, hpStep: 9, coalChance: 0.6,
+  bodyDmg: 1, spotDmg: 5, spotPerfect: 8, heal: 2,
+  roundBeats: 2, spotLife: 1.6, perfectAt: 1.5, perfectWin: 0.3,   // 單位:拍
+  spotR: 38, spotMargin: 12,
+  feed: 1.5, feedPerfect: 2,           // 餵食成功後,下一發煤炭打弱點的傷害倍率
+};
+const rollItem = () => Math.random() < YETI.coalChance ? 'coal' : 'gift';
+// 弱點在雪怪橢圓內的隨機位置(避開正中央,免得每次都在同一點)
+function newSpot(y) {
+  for (let i = 0; i < 20; i++) {
+    const a = rand(0, TAU), r = rand(0.35, 0.8);
+    const sx = 480 + Math.cos(a) * r * 225, sy = (y.baseY - 230) + Math.sin(a) * r * 200;
+    if (!y.spot || Math.hypot(sx - y.spot.x, sy - y.spot.y) > 90) return { x: sx, y: sy };
+  }
+  return { x: 480, y: y.baseY - 230 };
+}
+const yetiBeat = y => { const b = Sfx.beat(); return b == null ? y.t * 144 / 60 : b; };
+
 function startYeti() {
   yeti = {
-    phase: 'enter', t: 0, maxHp: 24 + 6 * Math.min(G.yetiCount, 6), hp: 0, timeLeft: 10,
+    phase: 'enter', t: 0, maxHp: YETI.hpBase + YETI.hpStep * Math.min(G.yetiCount, 6), hp: 0, timeLeft: YETI.time,
     hit: 0, mood: 'roar', dmg: 0, dropY: -520, slammed: false, moodT: 0,
+    round: -1, nextItem: 'coal', spot: null, spotBeat: 0, spotsHit: 0, boost: 1,
   };
   yeti.hp = yeti.maxHp;
-  banner = { txt: '⚠ 雪怪來襲 ⚠', sub: '快換煤炭!狂點打倒牠!', t: 0, life: 1.8 };
+  banner = { txt: '⚠ 雪怪來襲 ⚠', sub: '道具會亂換!看準節拍,煤炭打弱點!', t: 0, life: 2.2 };
   Sfx.yetiRoar();
   flash('#6ec6ff', 0.5);
-  say('是雪怪!拿煤炭來!', 1.8);
+  say('是雪怪!看節拍,別丟錯!', 1.8);
 }
 
 function hitYeti(p) {
-  const dx = (p.tx - 480) / 250, dy = (p.ty - (yeti.baseY - 230)) / 235;
+  const y = yeti, dx = (p.tx - 480) / 250, dy = (p.ty - (y.baseY - 230)) / 235;
   if (dx * dx + dy * dy > 1) { burst(p.tx, p.ty, 6, { col: '#fff', size: 4, speed: 120 }); Sfx.splash(); return; }
   if (p.kind === 'coal') {
-    yeti.hp--; yeti.hit = 1; yeti.dmg = 1 - yeti.hp / yeti.maxHp;
-    burst(p.tx, p.ty, 10, { col: ['#222', '#444', '#ff7b00'], size: 6, speed: 240, up: 100 });
-    addText(p.tx + rand(-20, 20), p.ty - 20, '-1', '#fff', 22, 0.6);
+    const h = spotHit(p), onSpot = !!h;
+    let dmg = YETI.bodyDmg, pts = 10;
+    if (onSpot) {
+      const perfect = h.perfect;
+      dmg = perfect ? YETI.spotPerfect : YETI.spotDmg; pts = perfect ? 120 : 60;
+      if (y.boost > 1) { dmg = Math.round(dmg * y.boost); addText(p.tx, p.ty - 140, '吃撐加成 ×' + y.boost, '#ff9ed2', 24, 0.9); y.boost = 1; }
+      addText(p.tx, p.ty - 105, perfect ? 'PERFECT!' : 'GOOD!', perfect ? '#ffe066' : '#9ef0ff', perfect ? 34 : 28, 0.9);
+      ring(p.tx, p.ty, 60, perfect ? '#ffe066' : '#9ef0ff');
+      Sfx.combo();
+    }
+    y.hp = Math.max(0, y.hp - dmg); y.hit = 1; y.dmg = 1 - y.hp / y.maxHp;
+    burst(p.tx, p.ty, onSpot ? 18 : 10, { col: ['#222', '#444', '#ff7b00'], size: 6, speed: 240, up: 100 });
+    addText(p.tx + rand(-20, 20), p.ty - 20, '-' + dmg, onSpot ? '#ffd166' : '#fff', onSpot ? 30 : 22, 0.6);
     Sfx.yetiHit();
     ring(p.tx, p.ty, 30, '#ffb703');
     burst(p.tx, p.ty, 8, { col: ['#ffb703', '#fff'], shape: 'line', size: 16, speed: 520, g: 0, life: 0.25 });
-    if (yeti.hp % 6 === 0) addPow(p.tx, p.ty - 10, 'BONK!', '#ff7b00', 50);
-    G.score += 10;
-    if (yeti.hp <= 0) defeatYeti();
+    if (onSpot) addPow(p.tx, p.ty - 10, 'BONK!', '#ff7b00', 50);
+    G.score += pts;
+    if (y.hp <= 0) defeatYeti();
   } else {
-    yeti.hp = Math.min(yeti.maxHp, yeti.hp + 2); yeti.dmg = 1 - yeti.hp / yeti.maxHp;
+    const h = spotHit(p);
     yeti.mood = 'eat'; yeti.moodT = 0.7;
-    addText(p.tx, p.ty - 20, '雪怪吃掉了! 回血+2', '#7fd4ff', 22, 1);
-    Sfx.burp();
+    if (h) {   // 餵進嘴裡:不回血,下一發煤炭打弱點傷害加成
+      y.boost = h.perfect ? YETI.feedPerfect : YETI.feed;
+      G.score += h.perfect ? 80 : 40;
+      addText(p.tx, p.ty - 105, h.perfect ? 'PERFECT!' : 'GOOD!', h.perfect ? '#ffe066' : '#ffc2e6', h.perfect ? 34 : 28, 0.9);
+      addText(p.tx, p.ty - 60, '餵食成功!吃撐 ×' + y.boost, '#ff9ed2', 26, 1.2);
+      ring(p.tx, p.ty, 60, '#ff9ed2'); burst(p.tx, p.ty, 14, { col: ['#ff9ed2', '#fff', '#ffe066'], shape: 'heart', size: 12, speed: 220, up: 120 });
+      Sfx.combo(); Sfx.burp();
+    } else {
+      yeti.hp = Math.min(yeti.maxHp, yeti.hp + YETI.heal); yeti.dmg = 1 - yeti.hp / yeti.maxHp;
+      addText(p.tx, p.ty - 20, '雪怪吃掉了! 回血+' + YETI.heal, '#7fd4ff', 22, 1);
+      Sfx.burp();
+    }
   }
+}
+
+// 這次投擲是否命中「對應道具的目標點」(煤炭→橘色弱點、禮物→粉色嘴巴;以出手瞬間的狀態為準)
+function spotHit(p) {
+  const sp = p.spot;
+  if (!sp || sp.used || sp.kind !== p.kind || Math.hypot(p.tx - sp.x, p.ty - sp.y) > YETI.spotR + YETI.spotMargin) return null;
+  sp.used = true; if (yeti.spot === sp) yeti.spot = null; yeti.spotsHit++;
+  return { perfect: Math.abs((p.beat - sp.beat) - YETI.perfectAt) <= YETI.perfectWin };
 }
 
 function defeatYeti() {
@@ -593,17 +647,26 @@ function updateYeti(dt) {
     if (!y.slammed && k >= 1) { y.slammed = true; Sfx.slam(); burst(480, 500, 30, { col: ['#fff', '#cfe3ff'], size: 9, speed: 400, up: 100 }); }
     if (y.t > 1.3) {
       y.phase = 'fight'; y.mood = 'idle'; y.t = 0;
-      if (santa.item !== 'coal') setItem('coal');
+      setItem('coal', true); y.nextItem = rollItem();
+      Sfx.music('fight');
     }
   } else if (y.phase === 'fight') {
     y.timeLeft -= dt;
+    const beat = yetiBeat(y), round = Math.max(0, Math.floor(beat / YETI.roundBeats));
+    if (round !== y.round) {                       // 新回合:換道具(上一回合已預告)、亮新弱點
+      if (y.round >= 0) { setItem(y.nextItem, true); y.nextItem = rollItem(); }
+      y.round = round; y.spotBeat = round * YETI.roundBeats;
+      y.spot = Object.assign(newSpot(y), { beat: y.spotBeat, used: false, kind: santa.item });
+      Sfx.tick();
+    }
+    if (y.spot && beat - y.spotBeat > YETI.spotLife) y.spot = null;
     if (mouse.down && time - lastThrow > 0.2) throwAt(mouse.x, mouse.y);
     if (y.timeLeft <= 0) {
       y.phase = 'fail'; y.t = 0; y.mood = 'roar';
       Sfx.yetiRoar();
     }
   } else if (y.phase === 'dying') {
-    if (y.t > 2.0) { yeti = null; G.yetiCount++; G.yetiCd = 4; }
+    if (y.t > 2.0) { yeti = null; G.yetiCount++; G.yetiCd = 4; Sfx.music('calm'); }
   } else if (y.phase === 'fail') {
     // 注意:slammed 已在登場砸地時用掉,失敗懲罰要用獨立旗標,否則永遠不會觸發
     if (y.t > 0.4 && !y.punished) {
@@ -614,7 +677,7 @@ function updateYeti(dt) {
       loseHeart(true);
       G.combo = 0; G.fever = 0;   // 進度打回原點(雪怪不算擊倒,下次門檻不變)
     }
-    if (y.t > 1.6) { yeti = null; G.yetiCd = 5; }
+    if (y.t > 1.6) { yeti = null; G.yetiCd = 5; if (state === 'play') Sfx.music('calm'); }
   }
 }
 
@@ -680,6 +743,7 @@ function update(dt) {
     return;
   }
   if (state === 'over') { overT += dt; santa.pose = 'pump'; updateClones(dt); updateTargets(dt); return; }
+  if (paused !== audioPaused) { audioPaused = paused; Sfx.setPaused(paused); }   // 暫停時音樂(與節拍時鐘)一起停
   if (paused) return;
 
   // ---- play ----
@@ -883,11 +947,15 @@ function drawHUD() {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; rr(ctx, bx - 4, by - 4, bw + 8, 26, 13); ctx.fill();
     ctx.fillStyle = '#e63946'; rr(ctx, bx, by, Math.max(10, bw * yeti.hp / yeti.maxHp), 18, 9); ctx.fill();
     outlineText('雪怪 ' + yeti.hp + ' / ' + yeti.maxHp, W / 2, by + 9, 15, '#fff', '#3a0a10');
-    const tk = clamp(yeti.timeLeft / 10, 0, 1);
+    const tk = clamp(yeti.timeLeft / YETI.time, 0, 1);
     ctx.fillStyle = 'rgba(0,0,0,.6)'; rr(ctx, bx, by + 30, bw, 10, 5); ctx.fill();
     ctx.fillStyle = tk > 0.3 ? '#ffd166' : '#ff4d4d'; rr(ctx, bx, by + 30, Math.max(8, bw * tk), 10, 5); ctx.fill();
-    const blink = santa.item !== 'coal' || Math.sin(time * 14) > 0;
-    if (blink) outlineText('狂點煤炭!!', W / 2, 92, 30, '#fff', '#b00020');
+    // 現在拿的是什麼:煤炭 → 打弱點;禮物 → 先別丟。最後一拍預告下一回合的道具
+    const coal = santa.item === 'coal', soon = ((yetiBeat(yeti) % YETI.roundBeats) + YETI.roundBeats) % YETI.roundBeats > 1;
+    if (coal) outlineText('煤炭!瞄準弱點', W / 2, 92, 28, '#fff', '#b00020');
+    else outlineText('禮物!餵進嘴巴', W / 2, 92, 28, '#ffc2e6', '#7a1850');
+    if (soon) outlineText('下一個:' + (yeti.nextItem === 'coal' ? '煤炭' : '禮物'), W / 2, 122, 20, '#cfe8ff', '#10204a');
+    if (yeti.boost > 1) outlineText('吃撐 ×' + yeti.boost + '!下一發煤炭打弱點加成', W / 2, soon ? 148 : 122, 18, '#ff9ed2', '#5a1040');
   }
 
   // 物品按鈕
@@ -905,6 +973,25 @@ function drawHUD() {
     ctx.fillText('[' + (k === 'gift' ? '1' : '2') + ']', b.x + 80, b.y + b.h / 2 + 14 - (sel ? 6 : 0));
   }
   drawToggles();
+}
+
+// 弱點:外圈隨節拍收縮,收到內圈(黃)的瞬間命中 = PERFECT
+function drawSpot(y) {
+  const age = (yetiBeat(y) - y.spotBeat) / YETI.perfectAt, s = y.spot, R = YETI.spotR;
+  const k = clamp(1 - age, 0, 1), near = Math.abs(age - 1) <= YETI.perfectWin / YETI.perfectAt;
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  const g = ctx.createRadialGradient(s.x, s.y, 4, s.x, s.y, R);
+  const gift = s.kind === 'gift';   // 禮物 → 粉色嘴巴(餵食);煤炭 → 橘色弱點
+  g.addColorStop(0, gift ? 'rgba(255,240,250,.95)' : 'rgba(255,255,200,.95)');
+  g.addColorStop(1, gift ? 'rgba(255,90,170,.6)' : 'rgba(255,120,0,.55)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, R, 0, TAU); ctx.fill();
+  ctx.lineWidth = 5; ctx.strokeStyle = near ? '#ffe066' : '#fff';
+  ctx.beginPath(); ctx.arc(s.x, s.y, R + 4 + k * 70, 0, TAU); ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = gift ? '#d6246e' : '#b00020';
+  ctx.beginPath(); ctx.arc(s.x, s.y, R + 4, 0, TAU); ctx.stroke();
+  if (gift) drawItem(ctx, 'gift', s.x, s.y, 0.9, 0);
+  ctx.restore();
 }
 
 function drawToggles() {
@@ -1241,6 +1328,7 @@ function render() {
   }
 
   drawFigures();
+  if (yeti && yeti.phase === 'fight' && yeti.spot) drawSpot(yeti);   // 畫在聖誕老人前面,不會被擋住
 
   // 投擲物
   for (const p of projectiles) if (p.started) {
@@ -1323,4 +1411,4 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // 除錯用:?debug 可在 console 呼叫
-window.__cog = { checkLayout, G, santa, targets, clones, startGame, get yeti() { return yeti; }, startYeti, setCombo(n) { G.combo = n; }, setFever(n) { G.fever = n; } };
+window.__cog = { checkLayout, G, santa, targets, clones, startGame, get yeti() { return yeti; }, startYeti, YETI, hitYeti, yetiBeat, throwAt, setCombo(n) { G.combo = n; }, setFever(n) { G.fever = n; } };

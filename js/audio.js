@@ -14,7 +14,7 @@ const Sfx = (() => {
     } catch (e) { ac = null; }
   }
 
-  function tone(f, d, type, v, slide, delay) {
+  function tone(f, d, type, v, slide, delay, dest) {
     if (!ac) return;
     const t = ac.currentTime + (delay || 0);
     const o = ac.createOscillator(), g = ac.createGain();
@@ -23,12 +23,12 @@ const Sfx = (() => {
     if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t + d);
     g.gain.setValueAtTime(v == null ? 0.25 : v, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + d);
-    o.connect(g); g.connect(master);
+    o.connect(g); g.connect(dest || master);
     o.start(t); o.stop(t + d + 0.03);
   }
 
   let noiseBuf = null;
-  function noise(d, v, freq, type, delay, sweep) {
+  function noise(d, v, freq, type, delay, sweep, dest) {
     if (!ac) return;
     if (!noiseBuf) {
       noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
@@ -43,18 +43,106 @@ const Sfx = (() => {
     const g = ac.createGain();
     g.gain.setValueAtTime(v == null ? 0.3 : v, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + d);
-    s.connect(f); f.connect(g); g.connect(master);
+    s.connect(f); f.connect(g); g.connect(dest || master);
     s.start(t); s.stop(t + d + 0.03);
+  }
+
+  // ---------------- 背景音樂(Jingle Bells,1857,公有領域) ----------------
+  // 同一段旋律兩種編曲:平常是輕快的雪橇鈴,雪怪戰是加了鼓點的搖滾版。
+  // 排程用 WebAudio 時鐘,所以 beat() 可以直接當節奏判定的時間基準。
+  const B = { C4: 60, D4: 62, E4: 64, F4: 65, G4: 67 };
+  const mk = (n, d) => ({ n: B[n], d });
+  const bars = (...bs) => bs.map(b => b.map(([n, d]) => mk(n, d)));
+  const A = [[['E4', 1], ['E4', 1], ['E4', 2]], [['E4', 1], ['E4', 1], ['E4', 2]],
+             [['E4', 1], ['G4', 1], ['C4', 1.5], ['D4', 0.5]], [['E4', 4]]];
+  const B1 = [[['F4', 1], ['F4', 1], ['F4', 1], ['F4', 1]], [['F4', 1], ['E4', 1], ['E4', 1], ['E4', 0.5], ['E4', 0.5]],
+              [['E4', 1], ['D4', 1], ['D4', 1], ['E4', 1]], [['D4', 2], ['G4', 2]]];
+  const B2 = [B1[0], B1[1], [['G4', 1], ['G4', 1], ['F4', 1], ['D4', 1]], [['C4', 4]]];
+  const MELODY = [...bars(...A), ...bars(...B1), ...bars(...A), ...bars(...B2)];
+  const CHORDS = ['C', 'C', 'C', 'C', 'F', 'C', 'G', 'G', 'C', 'C', 'C', 'C', 'F', 'C', 'G', 'C'];
+  const ROOT = { C: 48, F: 53, G: 55 };
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  const SONGS = {
+    calm:  { bpm: 116, vol: 0.5, lead: 'triangle', leadV: 0.1, bass: 'sine', drums: false },
+    fight: { bpm: 144, vol: 0.62, lead: 'square', leadV: 0.055, bass: 'sawtooth', drums: true },
+  };
+  let song = null, timer = null, musicBus = null;
+
+  function schedule(def, startBeat, endBeat, t0, spb) {
+    // 把 [startBeat, endBeat) 範圍內的音符排進 WebAudio 時鐘
+    MELODY.forEach((bar, bi) => {
+      let bb = bi * 4;
+      for (const nt of bar) {
+        if (bb >= startBeat && bb < endBeat) {
+          const d = (t0 + bb * spb) - ac.currentTime;
+          tone(hz(nt.n + 12), nt.d * spb * 0.9, def.lead, def.leadV, 0, d, musicBus);
+          if (def.lead === 'triangle') tone(hz(nt.n), nt.d * spb * 0.9, 'sine', 0.05, 0, d, musicBus);
+        }
+        bb += nt.d;
+      }
+    });
+    for (let bt = Math.ceil(startBeat * 2) / 2; bt < endBeat; bt += 0.5) {
+      const d = (t0 + bt * spb) - ac.currentTime, bar = Math.floor(bt / 4) % 16, inBar = bt % 4;
+      const root = ROOT[CHORDS[bar]];
+      if (def.drums) {
+        if (Number.isInteger(bt)) tone(150, 0.16, 'sine', 0.55, 40, d, musicBus);                      // 底鼓:每拍
+        if (inBar === 1 || inBar === 3) noise(0.1, 0.22, 1800, 'bandpass', d, 900, musicBus);           // 小鼓:2、4 拍
+        tone(hz(root), 0.2, def.bass, 0.08, 0, d, musicBus);                                            // 八分音符低音
+        if (!Number.isInteger(bt)) noise(0.05, 0.1, 7000, 'highpass', d, 0, musicBus);                  // 反拍鈴聲
+      } else {
+        if (inBar === 0 || inBar === 2) tone(hz(root + (inBar === 2 ? 7 : 0)), 0.45, def.bass, 0.16, 0, d, musicBus);
+        if (!Number.isInteger(bt) || inBar === 0) noise(0.07, 0.05, 7500, 'highpass', d, 0, musicBus); // 雪橇鈴
+      }
+    }
+  }
+
+  function pump() {
+    if (!song || !ac) return;
+    const spb = 60 / song.def.bpm, loopBeats = 64;
+    const horizon = (ac.currentTime + 0.35 - song.t0) / spb;       // 排到 0.35 秒之後
+    while (song.done < horizon) {
+      const from = song.done, base = Math.floor(from / loopBeats) * loopBeats;
+      const end = Math.min(horizon, base + loopBeats);
+      schedule(song.def, from - base, end - base, song.t0 + base * spb, spb);
+      song.done = end;
+    }
+  }
+
+  function startSong(name) {
+    if (!ac || (song && song.name === name)) return;
+    stopSong();
+    const def = SONGS[name];
+    musicBus = ac.createGain(); musicBus.gain.value = def.vol; musicBus.connect(master);
+    song = { name, def, t0: ac.currentTime + 0.1, done: 0 };
+    pump(); timer = setInterval(pump, 60);
+  }
+  function stopSong() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    if (musicBus && ac) {
+      const bus = musicBus, t = ac.currentTime;
+      bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(bus.gain.value, t); bus.gain.linearRampToValueAtTime(0, t + 0.25);
+      setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 400);
+    }
+    song = null; musicBus = null;
   }
 
   return {
     init,
+    music: startSong,
+    stopMusic: stopSong,
+    // 目前歌曲的拍數(含小數);沒有音樂時回傳 null,呼叫端要自己備援
+    beat() { return song && ac ? (ac.currentTime - song.t0) / (60 / song.def.bpm) : null; },
+    bpm() { return song ? song.def.bpm : 0; },
+    setPaused(p) { if (!ac) return; if (p) ac.suspend(); else ac.resume(); },
     get muted() { return muted; },
     toggleMute() {
       muted = !muted;
       if (master) master.gain.value = muted ? 0 : 0.55;
       try { localStorage.setItem('cog_muted', muted ? '1' : '0'); } catch (e) {}
     },
+    tick()    { tone(1320, 0.05, 'square', 0.06, 0); },
     click()   { tone(520, 0.08, 'square', 0.12, 780); },
     swap()    { tone(400, 0.06, 'square', 0.1, 600); tone(600, 0.06, 'square', 0.1, 900, 0.05); },
     throw()   { noise(0.16, 0.18, 800, 'highpass', 0, 3500); tone(300, 0.12, 'triangle', 0.1, 700); },
