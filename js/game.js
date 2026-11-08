@@ -529,11 +529,11 @@ function updateTargets(dt) {
 // 雪怪戰:音樂節拍每 2 拍為一個回合 —— 道具隨機換一次、雪怪身上亮一個弱點。
 // 煤炭打弱點重傷(接近收尾拍更痛),打身體只有 1 點;禮物丟到雪怪會餵牠回血。
 const YETI = {
-  time: 15, hpBase: 30, hpStep: 9, coalChance: 0.6,
+  time: 15, hpBase: 32, hpStep: 10, coalChance: 0.6,
   bodyDmg: 1, spotDmg: 5, spotPerfect: 8, heal: 2,
   roundBeats: 2, spotLife: 1.6, perfectAt: 1.5, perfectWin: 0.3,   // 單位:拍
   spotR: 38, spotMargin: 12,
-  feed: 1.5, feedPerfect: 2,           // 餵食成功後,下一發煤炭打弱點的傷害倍率
+  feed: 2, feedPerfect: 3,          // 餵食成功後,下一發煤炭打弱點的傷害倍率
 };
 const rollItem = () => Math.random() < YETI.coalChance ? 'coal' : 'gift';
 // 弱點在雪怪橢圓內的隨機位置(避開正中央,免得每次都在同一點)
@@ -574,6 +574,7 @@ function hitYeti(p) {
       ring(p.tx, p.ty, 60, perfect ? '#ffe066' : '#9ef0ff');
       Sfx.combo();
     }
+    if (!onSpot) wrongItemHint(p);
     y.hp = Math.max(0, y.hp - dmg); y.hit = 1; y.dmg = 1 - y.hp / y.maxHp;
     burst(p.tx, p.ty, onSpot ? 18 : 10, { col: ['#222', '#444', '#ff7b00'], size: 6, speed: 240, up: 100 });
     addText(p.tx + rand(-20, 20), p.ty - 20, '-' + dmg, onSpot ? '#ffd166' : '#fff', onSpot ? 30 : 22, 0.6);
@@ -595,10 +596,18 @@ function hitYeti(p) {
       Sfx.combo(); Sfx.burp();
     } else {
       yeti.hp = Math.min(yeti.maxHp, yeti.hp + YETI.heal); yeti.dmg = 1 - yeti.hp / yeti.maxHp;
-      addText(p.tx, p.ty - 20, '雪怪吃掉了! 回血+' + YETI.heal, '#7fd4ff', 22, 1);
+      addText(p.tx, p.ty - 20, '沒餵到嘴巴 → 雪怪回血+' + YETI.heal, '#7fd4ff', 22, 1.1);
+      wrongItemHint(p);
       Sfx.burp();
     }
   }
+}
+
+// 丟到目標點附近但道具不對(煤炭丟嘴巴、禮物丟弱點)時,提醒這一回合該用什麼
+function wrongItemHint(p) {
+  const sp = p.spot;
+  if (sp && !sp.used && sp.kind !== p.kind && Math.hypot(p.tx - sp.x, p.ty - sp.y) <= YETI.spotR + YETI.spotMargin)
+    addText(sp.x, sp.y - 70, '這回合要用' + (sp.kind === 'gift' ? '禮物' : '煤炭') + '!', '#ffffff', 22, 1);
 }
 
 // 這次投擲是否命中「對應道具的目標點」(煤炭→橘色弱點、禮物→粉色嘴巴;以出手瞬間的狀態為準)
@@ -659,8 +668,12 @@ function updateYeti(dt) {
       y.spot = Object.assign(newSpot(y), { beat: y.spotBeat, used: false, kind: santa.item });
       Sfx.tick();
     }
-    if (y.spot && beat - y.spotBeat > YETI.spotLife) y.spot = null;
-    if (mouse.down && time - lastThrow > 0.2) throwAt(mouse.x, mouse.y);
+    if (y.spot && beat - y.spotBeat > YETI.spotLife) {   // 這回合的目標沒打到:明說「錯過」,玩家才知道剛剛有沒有成功
+      if (!y.spot.used) addText(y.spot.x, y.spot.y - 30, y.spot.kind === 'gift' ? '沒餵到…' : 'MISS', '#c8d0e0', 24, 0.8);
+      y.spot = null;
+    }
+    // 按住連發只丟煤炭;禮物一定要玩家自己點(不然道具一換,按著不放就會自動丟出一堆禮物)
+    if (mouse.down && santa.item === 'coal' && time - lastThrow > 0.2) throwAt(mouse.x, mouse.y);
     if (y.timeLeft <= 0) {
       y.phase = 'fail'; y.t = 0; y.mood = 'roar';
       Sfx.yetiRoar();
@@ -993,6 +1006,12 @@ function drawSpot(y) {
   ctx.lineWidth = 3; ctx.strokeStyle = gift ? '#d6246e' : '#b00020';
   ctx.beginPath(); ctx.arc(s.x, s.y, R + 4, 0, TAU); ctx.stroke();
   if (gift) drawItem(ctx, 'gift', s.x, s.y, 0.9, 0);
+  if (!gift && y.boost > 1) {   // 餵食的成果:弱點變粉紅發光並標出倍率,玩家才看得到這次餵食換到了什麼
+    const pulse = 0.5 + 0.5 * Math.sin(time * 10);
+    ctx.lineWidth = 6; ctx.strokeStyle = `rgba(255,120,200,${0.5 + 0.4 * pulse})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, R + 10 + pulse * 6, 0, TAU); ctx.stroke();
+    outlineText('×' + y.boost, s.x, s.y, 26, '#ff9ed2', '#5a1040');
+  }
   ctx.restore();
 }
 
